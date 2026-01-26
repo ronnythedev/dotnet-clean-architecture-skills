@@ -1,7 +1,7 @@
 ---
 name: jwt-authentication
 description: "Configures JWT Bearer authentication for .NET APIs. Includes token generation, validation, refresh tokens, and user context extraction from claims."
-version: 1.0.0
+version: 1.1.0
 language: C#
 framework: .NET 8+
 dependencies: Microsoft.AspNetCore.Authentication.JwtBearer, System.IdentityModel.Tokens.Jwt
@@ -13,10 +13,14 @@ dependencies: Microsoft.AspNetCore.Authentication.JwtBearer, System.IdentityMode
 
 This skill implements JWT (JSON Web Token) authentication for .NET APIs:
 
+- **Access Token** - Short-lived JWT returned in response body
+- **Refresh Token** - Stored in HttpOnly cookie (secure, not accessible via JavaScript)
+- **Options Pattern** - Configurable expiration via JwtOptions
+- **Token Rotation** - New refresh token issued on each refresh
+- **Security Audit** - Comprehensive event tracking for compliance
 - **Token generation** - Create access and refresh tokens
 - **Token validation** - Validate incoming tokens
 - **User context** - Extract user info from claims
-- **Refresh flow** - Handle token refresh
 
 ## Quick Reference
 
@@ -24,9 +28,12 @@ This skill implements JWT (JSON Web Token) authentication for .NET APIs:
 |-----------|---------|----------|
 | `IJwtService` | Token generation interface | Application/Abstractions |
 | `JwtService` | Token generation implementation | Infrastructure/Authentication |
+| `JwtOptions` | configuration (expiration, issuer, etc.) | Infrastructure/Authentication |
 | `JwtBearerOptionsSetup` | Configure JWT validation | Infrastructure/Authentication |
 | `IUserContext` | Current user info | Application/Abstractions |
 | `UserContext` | Extract from HttpContext | Infrastructure/Authentication |
+| `IRefreshTokenRepository` | Refresh token storage | Domain/Identity |
+| `CookieSettings` | Cookie configuration | Infrastructure/Authentication |
 
 ---
 
@@ -37,14 +44,17 @@ This skill implements JWT (JSON Web Token) authentication for .NET APIs:
 ├── Authentication/
 │   ├── IJwtService.cs
 │   ├── IUserContext.cs
-│   └── TokenResponse.cs
+│   ├── TokenResponse.cs
+│   └── AuthenticationErrors.cs
 
 /Infrastructure/
 ├── Authentication/
+│   ├── JwtOptions.cs
 │   ├── JwtService.cs
 │   ├── JwtBearerOptionsSetup.cs
 │   ├── UserContext.cs
-│   └── AuthenticationExtensions.cs
+│   ├── CookieSettings.cs
+│   └── RefreshTokenCookieManager.cs
 ```
 
 ---
@@ -64,6 +74,35 @@ public sealed class JwtOptions
     public string SecretKey { get; init; } = string.Empty;
     public int AccessTokenExpirationMinutes { get; init; } = 60;
     public int RefreshTokenExpirationDays { get; init; } = 7;
+    public CookieSettings Cookie { get; init; } = new();
+}
+
+public sealed class CookieSettings
+{
+    /// <summary>
+    /// Name of the refresh token cookie
+    /// </summary>
+    public string Name { get; init; } = "X-Refresh-Token";
+
+    /// <summary>
+    /// Cookie domain (leave empty for current domain)
+    /// </summary>
+    public string? Domain { get; init; }
+
+    /// <summary>
+    /// Cookie path
+    /// </summary>
+    public string Path { get; init; } = "/api/v1/auth";
+
+    /// <summary>
+    /// SameSite policy (Strict recommended for healthcare)
+    /// </summary>
+    public SameSiteMode SameSite { get; init; } = SameSiteMode.Strict;
+
+    /// <summary>
+    /// Require HTTPS (always true in production)
+    /// </summary>
+    public bool SecureOnly { get; init; } = true;
 }
 ```
 
@@ -76,7 +115,14 @@ public sealed class JwtOptions
     "Audience": "your-app-name",
     "SecretKey": "your-secret-key-at-least-32-characters-long-for-security",
     "AccessTokenExpirationMinutes": 60,
-    "RefreshTokenExpirationDays": 7
+    "RefreshTokenExpirationDays": 7,
+    "Cookie": {
+      "Name": "X-Refresh-Token",
+      "Domain": "",
+      "Path": "/api/v1/auth",
+      "SameSite": "Strict",
+      "SecureOnly": true
+    }    
   }
 }
 ```
@@ -94,28 +140,41 @@ namespace {name}.application.abstractions.authentication;
 public interface IJwtService
 {
     /// <summary>
-    /// Generates access and refresh tokens for a user
+    /// Generate access and refresh tokens for a user
     /// </summary>
-    TokenResponse GenerateTokens(User user, IEnumerable<string> roles);
+    TokenGenerationResult GenerateTokens(
+        User user, 
+        IEnumerable<string> roles,
+        IEnumerable<string>? permissions = null);
 
     /// <summary>
-    /// Generates access and refresh tokens with custom claims
+    /// Generate tokens with custom claims
     /// </summary>
-    TokenResponse GenerateTokens(
+    TokenGenerationResult GenerateTokens(
         Guid userId,
         string email,
         IEnumerable<string> roles,
         IDictionary<string, string>? additionalClaims = null);
 
     /// <summary>
-    /// Validates a refresh token and returns user ID if valid
+    /// Hash a refresh token for secure database storage
     /// </summary>
-    Guid? ValidateRefreshToken(string refreshToken);
+    string HashRefreshToken(string refreshToken);
 
     /// <summary>
-    /// Generates a new access token from a valid refresh token
+    /// Verify a plain refresh token against its hash
     /// </summary>
-    TokenResponse? RefreshAccessToken(string refreshToken);
+    bool VerifyRefreshToken(string plainToken, string hashedToken);
+
+    /// <summary>
+    /// Get access token expiration time
+    /// </summary>
+    DateTime GetAccessTokenExpiry();
+
+    /// <summary>
+    /// Get refresh token expiration time
+    /// </summary>
+    DateTime GetRefreshTokenExpiry();
 }
 ```
 
@@ -127,7 +186,18 @@ public interface IJwtService
 // src/{name}.application/Abstractions/Authentication/TokenResponse.cs
 namespace {name}.application.abstractions.authentication;
 
+/// <summary>
+/// Response containing access token (refresh token is set via HttpOnly cookie)
+/// </summary>
 public sealed record TokenResponse(
+    string AccessToken,
+    DateTime AccessTokenExpiration,
+    string TokenType = "Bearer");
+
+/// <summary>
+/// Internal response including refresh token (for cookie setting)
+/// </summary>
+public sealed record TokenGenerationResult(
     string AccessToken,
     string RefreshToken,
     DateTime AccessTokenExpiration,
@@ -146,66 +216,88 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using {name}.application.abstractions.authentication;
-using {name}.domain.users;
+using {name}.application.Abstractions.Authentication;
+using {name}.application.Abstractions.Clock;
+using {name}.domain.identity;
 
 namespace {name}.infrastructure.authentication;
 
 internal sealed class JwtService : IJwtService
 {
     private readonly JwtOptions _options;
+    private readonly IDateTimeProvider _dateTimeProvider;
     private readonly SigningCredentials _signingCredentials;
     private readonly JwtSecurityTokenHandler _tokenHandler;
 
-    public JwtService(IOptions<JwtOptions> options)
+    public JwtService(
+        IOptions<JwtOptions> options,
+        IDateTimeProvider dateTimeProvider)
     {
         _options = options.Value;
-        
+        _dateTimeProvider = dateTimeProvider;
+
         var securityKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_options.SecretKey));
-        
+
         _signingCredentials = new SigningCredentials(
             securityKey,
             SecurityAlgorithms.HmacSha256);
-        
+
         _tokenHandler = new JwtSecurityTokenHandler();
     }
 
-    public TokenResponse GenerateTokens(User user, IEnumerable<string> roles)
+    public TokenGenerationResult GenerateTokens(
+        User user,
+        IEnumerable<string> roles,
+        IEnumerable<string>? permissions = null)
     {
-        return GenerateTokens(
+        var additionalClaims = new Dictionary<string, string>
+        {
+            ["name"] = $"{user.FirstName} {user.LastName}".Trim()
+        };
+
+        return GenerateTokensInternal(
             user.Id,
-            user.Email.Value,
+            user.Email,
             roles,
-            new Dictionary<string, string>
-            {
-                { "name", user.Name },
-                { "organization_id", user.OrganizationId.ToString() }
-            });
+            permissions,
+            additionalClaims);
     }
 
-    public TokenResponse GenerateTokens(
+    public TokenGenerationResult GenerateTokens(
         Guid userId,
         string email,
         IEnumerable<string> roles,
         IDictionary<string, string>? additionalClaims = null)
     {
-        var accessTokenExpiration = DateTime.UtcNow
-            .AddMinutes(_options.AccessTokenExpirationMinutes);
-        
-        var refreshTokenExpiration = DateTime.UtcNow
-            .AddDays(_options.RefreshTokenExpirationDays);
+        return GenerateTokensInternal(userId, email, roles, null, additionalClaims);
+    }
 
+    private TokenGenerationResult GenerateTokensInternal(
+        Guid userId,
+        string email,
+        IEnumerable<string> roles,
+        IEnumerable<string>? permissions,
+        IDictionary<string, string>? additionalClaims)
+    {
+        var now = _dateTimeProvider.UtcNow;
+        var accessTokenExpiration = now.AddMinutes(_options.AccessTokenExpirationMinutes);
+        var refreshTokenExpiration = now.AddDays(_options.RefreshTokenExpirationDays);
+
+        // Generate access token
         var accessToken = GenerateAccessToken(
             userId,
             email,
             roles,
+            permissions,
             additionalClaims,
+            now,
             accessTokenExpiration);
 
-        var refreshToken = GenerateRefreshToken(userId, refreshTokenExpiration);
+        // Generate opaque refresh token
+        var refreshToken = GenerateRefreshToken();
 
-        return new TokenResponse(
+        return new TokenGenerationResult(
             accessToken,
             refreshToken,
             accessTokenExpiration,
@@ -216,7 +308,9 @@ internal sealed class JwtService : IJwtService
         Guid userId,
         string email,
         IEnumerable<string> roles,
+        IEnumerable<string>? permissions,
         IDictionary<string, string>? additionalClaims,
+        DateTime now,
         DateTime expiration)
     {
         var claims = new List<Claim>
@@ -224,8 +318,8 @@ internal sealed class JwtService : IJwtService
             new(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new(JwtRegisteredClaimNames.Email, email),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(JwtRegisteredClaimNames.Iat, 
-                DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+            new(JwtRegisteredClaimNames.Iat,
+                new DateTimeOffset(now).ToUnixTimeSeconds().ToString(),
                 ClaimValueTypes.Integer64)
         };
 
@@ -235,12 +329,24 @@ internal sealed class JwtService : IJwtService
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
+        // Add permissions
+        if (permissions is not null)
+        {
+            foreach (var permission in permissions)
+            {
+                claims.Add(new Claim("permission", permission));
+            }
+        }
+
         // Add additional claims
         if (additionalClaims is not null)
         {
             foreach (var (key, value) in additionalClaims)
             {
-                claims.Add(new Claim(key, value));
+                if (!string.IsNullOrEmpty(value))
+                {
+                    claims.Add(new Claim(key, value));
+                }
             }
         }
 
@@ -248,99 +354,165 @@ internal sealed class JwtService : IJwtService
             issuer: _options.Issuer,
             audience: _options.Audience,
             claims: claims,
-            notBefore: DateTime.UtcNow,
+            notBefore: now,
             expires: expiration,
             signingCredentials: _signingCredentials);
 
         return _tokenHandler.WriteToken(token);
     }
 
-    private string GenerateRefreshToken(Guid userId, DateTime expiration)
+    private static string GenerateRefreshToken()
     {
-        var claims = new List<Claim>
+        var randomBytes = new byte[64];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomBytes);
+        return Convert.ToBase64String(randomBytes);
+    }
+
+    public string HashRefreshToken(string refreshToken)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
+
+    public bool VerifyRefreshToken(string plainToken, string hashedToken)
+    {
+        var computedHash = HashRefreshToken(plainToken);
+        return string.Equals(computedHash, hashedToken, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public DateTime GetAccessTokenExpiry()
+    {
+        return _dateTimeProvider.UtcNow.AddMinutes(_options.AccessTokenExpirationMinutes);
+    }
+
+    public DateTime GetRefreshTokenExpiry()
+    {
+        return _dateTimeProvider.UtcNow.AddDays(_options.RefreshTokenExpirationDays);
+    }
+}
+```
+
+---
+
+## Template: Refresh Token Cookie Manager
+
+```csharp
+// src/{name}.infrastructure/Authentication/RefreshTokenCookieManager.cs
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
+
+namespace {name}.infrastructure.authentication;
+
+public interface IRefreshTokenCookieManager
+{
+    void SetRefreshTokenCookie(HttpResponse response, string refreshToken, DateTime expiry);
+    string? GetRefreshTokenFromCookie(HttpRequest request);
+    void ClearRefreshTokenCookie(HttpResponse response);
+}
+
+internal sealed class RefreshTokenCookieManager : IRefreshTokenCookieManager
+{
+    private readonly JwtOptions _options;
+
+    public RefreshTokenCookieManager(IOptions<JwtOptions> options)
+    {
+        _options = options.Value;
+    }
+
+    public void SetRefreshTokenCookie(HttpResponse response, string refreshToken, DateTime expiry)
+    {
+        var cookieOptions = new CookieOptions
         {
-            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new("token_type", "refresh")
+            HttpOnly = true,                          // Not accessible via JavaScript (XSS protection)
+            Secure = _options.Cookie.SecureOnly,      // HTTPS only
+            SameSite = _options.Cookie.SameSite,      // CSRF protection
+            Expires = expiry,
+            Path = _options.Cookie.Path,
+            Domain = string.IsNullOrEmpty(_options.Cookie.Domain) 
+                ? null 
+                : _options.Cookie.Domain,
+            IsEssential = true                        // Required for GDPR compliance
         };
 
-        var token = new JwtSecurityToken(
-            issuer: _options.Issuer,
-            audience: _options.Audience,
-            claims: claims,
-            notBefore: DateTime.UtcNow,
-            expires: expiration,
-            signingCredentials: _signingCredentials);
-
-        return _tokenHandler.WriteToken(token);
+        response.Cookies.Append(_options.Cookie.Name, refreshToken, cookieOptions);
     }
 
-    public Guid? ValidateRefreshToken(string refreshToken)
+    public string? GetRefreshTokenFromCookie(HttpRequest request)
     {
-        try
-        {
-            var principal = _tokenHandler.ValidateToken(
-                refreshToken,
-                GetValidationParameters(),
-                out var validatedToken);
-
-            if (validatedToken is not JwtSecurityToken jwtToken)
-            {
-                return null;
-            }
-
-            // Verify it's a refresh token
-            var tokenType = principal.FindFirst("token_type")?.Value;
-            if (tokenType != "refresh")
-            {
-                return null;
-            }
-
-            var userIdClaim = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-            
-            return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
-        }
-        catch
-        {
-            return null;
-        }
+        return request.Cookies.TryGetValue(_options.Cookie.Name, out var token) 
+            ? token 
+            : null;
     }
 
-    public TokenResponse? RefreshAccessToken(string refreshToken)
+    public void ClearRefreshTokenCookie(HttpResponse response)
     {
-        var userId = ValidateRefreshToken(refreshToken);
-        
-        if (userId is null)
+        var cookieOptions = new CookieOptions
         {
-            return null;
-        }
-
-        // In a real application, you would:
-        // 1. Look up the user from the database
-        // 2. Check if the refresh token is still valid (not revoked)
-        // 3. Get the user's current roles and claims
-        // For now, we generate new tokens with minimal claims
-        
-        return GenerateTokens(
-            userId.Value,
-            string.Empty,  // Would get from database
-            Array.Empty<string>());  // Would get from database
-    }
-
-    private TokenValidationParameters GetValidationParameters()
-    {
-        return new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = _options.Issuer,
-            ValidateAudience = true,
-            ValidAudience = _options.Audience,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_options.SecretKey)),
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
+            HttpOnly = true,
+            Secure = _options.Cookie.SecureOnly,
+            SameSite = _options.Cookie.SameSite,
+            Expires = DateTime.UtcNow.AddDays(-1),    // Expire immediately
+            Path = _options.Cookie.Path,
+            Domain = string.IsNullOrEmpty(_options.Cookie.Domain) 
+                ? null 
+                : _options.Cookie.Domain
         };
+
+        response.Cookies.Append(_options.Cookie.Name, string.Empty, cookieOptions);
+    }
+}
+```
+
+---
+
+## Template: Refresh Token Entity
+
+```csharp
+// src/{name}.domain/identity/RefreshToken.cs
+namespace {name}.domain.identity;
+
+public sealed class RefreshToken
+{
+    public Guid Id { get; private set; }
+    public Guid UserId { get; private set; }
+    public string TokenHash { get; private set; } = string.Empty;
+    public DateTime CreatedAt { get; private set; }
+    public DateTime ExpiresAt { get; private set; }
+    public DateTime? RevokedAt { get; private set; }
+    public string? ReplacedByTokenHash { get; private set; }
+    public string? DeviceInfo { get; private set; }
+    public string? IpAddress { get; private set; }
+
+    public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
+    public bool IsRevoked => RevokedAt.HasValue;
+    public bool IsActive => !IsRevoked && !IsExpired;
+
+    private RefreshToken() { }
+
+    public static RefreshToken Create(
+        Guid userId,
+        string tokenHash,
+        DateTime expiresAt,
+        string? deviceInfo = null,
+        string? ipAddress = null)
+    {
+        return new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            TokenHash = tokenHash,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = expiresAt,
+            DeviceInfo = deviceInfo,
+            IpAddress = ipAddress
+        };
+    }
+
+    public void Revoke(string? replacedByTokenHash = null)
+    {
+        RevokedAt = DateTime.UtcNow;
+        ReplacedByTokenHash = replacedByTokenHash;
     }
 }
 ```
@@ -598,20 +770,22 @@ public static class AuthenticationExtensions
 
 ---
 
-## Template: Login Command
+## Template: Login Command Handler
 
 ```csharp
-// src/{name}.application/Users/Login/LoginUserCommand.cs
-using {name}.application.abstractions.authentication;
-using {name}.application.abstractions.messaging;
+// src/{name}.application/Users/Login/LoginUserCommandHandler.cs
+using {name}.application.Abstractions.Authentication;
+using {name}.application.Abstractions.Messaging;
 using {name}.domain.abstractions;
-using {name}.domain.users;
+using {name}.domain.identity;
 
 namespace {name}.application.users.login;
 
 public sealed record LoginUserCommand(
     string Email,
-    string Password) : ICommand<TokenResponse>;
+    string Password,
+    string? DeviceInfo = null,
+    string? IpAddress = null) : ICommand<TokenResponse>;
 
 internal sealed class LoginUserCommandHandler
     : ICommandHandler<LoginUserCommand, TokenResponse>
@@ -620,17 +794,23 @@ internal sealed class LoginUserCommandHandler
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtService _jwtService;
     private readonly IRoleRepository _roleRepository;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public LoginUserCommandHandler(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         IJwtService jwtService,
-        IRoleRepository roleRepository)
+        IRoleRepository roleRepository,
+        IRefreshTokenRepository refreshTokenRepository,
+        IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
         _roleRepository = roleRepository;
+        _refreshTokenRepository = refreshTokenRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<TokenResponse>> Handle(
@@ -659,87 +839,127 @@ internal sealed class LoginUserCommandHandler
             return Result.Failure<TokenResponse>(UserErrors.AccountDeactivated);
         }
 
-        // Get user roles
-        var roles = await _roleRepository.GetRolesByUserIdAsync(
-            user.Id,
-            cancellationToken);
+        // Get user roles and permissions
+        var roles = await _roleRepository.GetRolesByUserIdAsync(user.Id, cancellationToken);
+        var roleNames = roles.Select(r => r.Name);
+        var permissions = roles.SelectMany(r => r.Permissions).Distinct();
 
         // Generate tokens
-        var tokenResponse = _jwtService.GenerateTokens(
-            user,
-            roles.Select(r => r.Name));
+        var tokenResult = _jwtService.GenerateTokens(user, roleNames, permissions);
 
-        return tokenResponse;
+        // Store hashed refresh token in database
+        var refreshTokenEntity = RefreshToken.Create(
+            userId: user.Id,
+            tokenHash: _jwtService.HashRefreshToken(tokenResult.RefreshToken),
+            expiresAt: tokenResult.RefreshTokenExpiration,
+            deviceInfo: request.DeviceInfo,
+            ipAddress: request.IpAddress);
+
+        _refreshTokenRepository.Add(refreshTokenEntity);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Return access token (refresh token will be set in cookie by controller)
+        return new TokenResponse(
+            tokenResult.AccessToken,
+            tokenResult.AccessTokenExpiration);
     }
 }
 ```
 
 ---
 
-## Template: Refresh Token Command
+## Template: Refresh Token Command Handler
 
 ```csharp
-// src/{name}.application/Users/RefreshToken/RefreshTokenCommand.cs
-using {name}.application.abstractions.authentication;
-using {name}.application.abstractions.messaging;
+// src/{name}.application/Users/RefreshToken/RefreshTokenCommandHandler.cs
+using {name}.application.Abstractions.Authentication;
+using {name}.application.Abstractions.Messaging;
 using {name}.domain.abstractions;
-using {name}.domain.users;
+using {name}.domain.identity;
 
-namespace {name}.application.users.refreshtoken;
+namespace {name}.application.users.refreshToken;
 
 public sealed record RefreshTokenCommand(
-    string RefreshToken) : ICommand<TokenResponse>;
+    string RefreshToken,
+    string? DeviceInfo = null,
+    string? IpAddress = null) : ICommand<TokenGenerationResult>;
 
 internal sealed class RefreshTokenCommandHandler
-    : ICommandHandler<RefreshTokenCommand, TokenResponse>
+    : ICommandHandler<RefreshTokenCommand, TokenGenerationResult>
 {
     private readonly IJwtService _jwtService;
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public RefreshTokenCommandHandler(
         IJwtService jwtService,
         IUserRepository userRepository,
-        IRoleRepository roleRepository)
+        IRoleRepository roleRepository,
+        IRefreshTokenRepository refreshTokenRepository,
+        IUnitOfWork unitOfWork)
     {
         _jwtService = jwtService;
         _userRepository = userRepository;
         _roleRepository = roleRepository;
+        _refreshTokenRepository = refreshTokenRepository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result<TokenResponse>> Handle(
+    public async Task<Result<TokenGenerationResult>> Handle(
         RefreshTokenCommand request,
         CancellationToken cancellationToken)
     {
-        // Validate refresh token
-        var userId = _jwtService.ValidateRefreshToken(request.RefreshToken);
+        // Hash the incoming token to find it in database
+        var tokenHash = _jwtService.HashRefreshToken(request.RefreshToken);
 
-        if (userId is null)
+        // Find the stored refresh token
+        var storedToken = await _refreshTokenRepository.GetByHashAsync(
+            tokenHash,
+            cancellationToken);
+
+        if (storedToken is null || !storedToken.IsActive)
         {
-            return Result.Failure<TokenResponse>(UserErrors.InvalidRefreshToken);
+            return Result.Failure<TokenGenerationResult>(UserErrors.InvalidRefreshToken);
         }
 
         // Get user
         var user = await _userRepository.GetByIdAsync(
-            userId.Value,
+            storedToken.UserId,
             cancellationToken);
 
         if (user is null || !user.IsActive)
         {
-            return Result.Failure<TokenResponse>(UserErrors.InvalidRefreshToken);
+            // Revoke the token if user is invalid
+            storedToken.Revoke();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return Result.Failure<TokenGenerationResult>(UserErrors.InvalidRefreshToken);
         }
 
-        // Get current roles
-        var roles = await _roleRepository.GetRolesByUserIdAsync(
-            user.Id,
-            cancellationToken);
+        // Get current roles and permissions
+        var roles = await _roleRepository.GetRolesByUserIdAsync(user.Id, cancellationToken);
+        var roleNames = roles.Select(r => r.Name);
+        var permissions = roles.SelectMany(r => r.Permissions).Distinct();
 
         // Generate new tokens
-        var tokenResponse = _jwtService.GenerateTokens(
-            user,
-            roles.Select(r => r.Name));
+        var tokenResult = _jwtService.GenerateTokens(user, roleNames, permissions);
 
-        return tokenResponse;
+        // Rotate refresh token: revoke old, create new
+        var newTokenHash = _jwtService.HashRefreshToken(tokenResult.RefreshToken);
+        storedToken.Revoke(replacedByTokenHash: newTokenHash);
+
+        var newRefreshToken = Domain.Identity.RefreshToken.Create(
+            userId: user.Id,
+            tokenHash: newTokenHash,
+            expiresAt: tokenResult.RefreshTokenExpiration,
+            deviceInfo: request.DeviceInfo,
+            ipAddress: request.IpAddress);
+
+        _refreshTokenRepository.Add(newRefreshToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return tokenResult;
     }
 }
 ```
@@ -753,8 +973,10 @@ internal sealed class RefreshTokenCommandHandler
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using {name}.application.abstractions.authentication;
 using {name}.application.users.login;
-using {name}.application.users.refreshtoken;
+using {name}.application.users.refreshToken;
+using {name}.infrastructure.authentication;
 
 namespace {name}.api.Controllers.Auth;
 
@@ -763,64 +985,152 @@ namespace {name}.api.Controllers.Auth;
 public class AuthController : ControllerBase
 {
     private readonly ISender _sender;
+    private readonly IRefreshTokenCookieManager _cookieManager;
 
-    public AuthController(ISender sender)
+    public AuthController(
+        ISender sender,
+        IRefreshTokenCookieManager cookieManager)
     {
         _sender = sender;
+        _cookieManager = cookieManager;
     }
 
     [HttpPost("login")]
     [AllowAnonymous]
-    public async Task<IActionResult> Login(
+    public async Task<IActionResult> LoginFull(
         [FromBody] LoginRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new LoginUserCommand(request.Email, request.Password);
+        var command = new LoginUserCommand(
+            request.Email,
+            request.Password,
+            DeviceInfo: Request.Headers.UserAgent,
+            IpAddress: HttpContext.Connection.RemoteIpAddress?.ToString());
 
         var result = await _sender.Send(command, cancellationToken);
 
         if (result.IsFailure)
         {
-            return Unauthorized(result.Error);
+            return Unauthorized(new { error = result.Error.Code, message = result.Error.Message });
         }
 
-        return Ok(result.Value);
+        // Set refresh token in HttpOnly cookie
+        _cookieManager.SetRefreshTokenCookie(
+            Response,
+            result.Value.RefreshToken,
+            result.Value.RefreshTokenExpiration);
+
+        // Return only access token in response body
+        return Ok(new TokenResponse(
+            result.Value.AccessToken,
+            result.Value.AccessTokenExpiration));
     }
 
     [HttpPost("refresh")]
     [AllowAnonymous]
-    public async Task<IActionResult> RefreshToken(
-        [FromBody] RefreshTokenRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> RefreshToken(CancellationToken cancellationToken)
     {
-        var command = new RefreshTokenCommand(request.RefreshToken);
+        // Get refresh token from HttpOnly cookie
+        var refreshToken = _cookieManager.GetRefreshTokenFromCookie(Request);
+
+        if (string.IsNullOrEmpty(refreshToken))
+        {
+            return Unauthorized(new { error = "invalid_token", message = "Refresh token not found" });
+        }
+
+        var command = new RefreshTokenCommand(
+            refreshToken,
+            DeviceInfo: Request.Headers.UserAgent,
+            IpAddress: HttpContext.Connection.RemoteIpAddress?.ToString());
 
         var result = await _sender.Send(command, cancellationToken);
 
         if (result.IsFailure)
         {
-            return Unauthorized(result.Error);
+            // Clear invalid cookie
+            _cookieManager.ClearRefreshTokenCookie(Response);
+            return Unauthorized(new { error = result.Error.Code, message = result.Error.Message });
         }
 
-        return Ok(result.Value);
+        // Set new refresh token in HttpOnly cookie (rotation)
+        _cookieManager.SetRefreshTokenCookie(
+            Response,
+            result.Value.RefreshToken,
+            result.Value.RefreshTokenExpiration);
+
+        // Return only access token in response body
+        return Ok(new TokenResponse(
+            result.Value.AccessToken,
+            result.Value.AccessTokenExpiration));
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout(CancellationToken cancellationToken)
+    {
+        // Get refresh token from cookie and revoke it
+        var refreshToken = _cookieManager.GetRefreshTokenFromCookie(Request);
+
+        if (!string.IsNullOrEmpty(refreshToken))
+        {
+            var command = new RevokeRefreshTokenCommand(refreshToken);
+            await _sender.Send(command, cancellationToken);
+        }
+
+        // Clear the cookie
+        _cookieManager.ClearRefreshTokenCookie(Response);
+
+        return NoContent();
     }
 
     [HttpGet("me")]
     [Authorize]
-    public IActionResult GetCurrentUser()
+    public IActionResult GetCurrentUser([FromServices] IUserContext userContext)
     {
-        // User info is available from HttpContext.User
         return Ok(new
         {
-            UserId = User.FindFirst("sub")?.Value,
-            Email = User.FindFirst("email")?.Value,
-            Roles = User.FindAll("role").Select(c => c.Value)
+            UserId = userContext.UserId,
+            Email = userContext.Email,
+            Name = userContext.Name,
+            PatientId = userContext.PatientId,
+            Roles = userContext.Roles,
+            Permissions = userContext.Permissions
         });
     }
 }
 
 public sealed record LoginRequest(string Email, string Password);
-public sealed record RefreshTokenRequest(string RefreshToken);
+```
+
+---
+
+## Template: Dependency Injection Registration
+
+```csharp
+// src/{name}.infrastructure/DependencyInjection.cs
+private static void AddAuthentication(IServiceCollection services, IConfiguration configuration)
+{
+    // Configure JWT options with nested cookie settings
+    services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+
+    // Register authentication services
+    services.AddScoped<IJwtService, JwtService>();
+    services.AddScoped<IRefreshTokenCookieManager, RefreshTokenCookieManager>();
+
+    // Register HttpContextAccessor for UserContext
+    services.AddHttpContextAccessor();
+    services.AddScoped<IUserContext, UserContext>();
+
+    // Configure JWT Bearer authentication
+    services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer();
+
+    services.ConfigureOptions<JwtBearerOptionsSetup>();
+
+    // Configure authorization
+    services.AddAuthorization();
+}
 ```
 
 ---
@@ -834,15 +1144,29 @@ public sealed record RefreshTokenRequest(string RefreshToken);
 5. **Validate all claims** - Issuer, audience, signature, expiration
 6. **No clock skew** - Set `ClockSkew = TimeSpan.Zero`
 7. **HTTPS only** - Never transmit tokens over HTTP
-8. **Don't store in localStorage** - Use httpOnly cookies for web apps
-9. **Revoke refresh tokens** - On logout, password change
-10. **Use IUserContext** - Don't access HttpContext directly in handlers
+8. **HttpOnly cookies** - Refresh tokens should never be accessible via JavaScript
+9. **Token rotation** - Issue new refresh token on each use
+10. **Revoke on logout** - Always revoke refresh token on logout
+11. **Use IUserContext** - Don't access HttpContext directly in handlers
 
 ---
 
 ## Anti-Patterns to Avoid
 
 ```csharp
+// ❌ WRONG: Returning refresh token in response body
+return Ok(new { accessToken, refreshToken });  // Exposed to XSS!
+
+// ✅ CORRECT: Set refresh token in HttpOnly cookie
+_cookieManager.SetRefreshTokenCookie(Response, refreshToken, expiry);
+return Ok(new { accessToken });
+
+// ❌ WRONG: Storing plain refresh token
+await _db.RefreshTokens.AddAsync(new { Token = refreshToken });
+
+// ✅ CORRECT: Store hashed token
+await _db.RefreshTokens.AddAsync(new { TokenHash = _jwtService.HashRefreshToken(refreshToken) });
+
 // ❌ WRONG: Short secret key
 "SecretKey": "abc123"  // Too short, insecure!
 
@@ -862,6 +1186,13 @@ public class Handler
     private readonly IUserContext _userContext;
     var userId = _userContext.UserId;
 }
+
+// ❌ WRONG: Never expiring refresh tokens
+ExpiresAt = DateTime.MaxValue  // Security risk!
+
+// ✅ CORRECT: Configured expiration
+ExpiresAt = DateTime.UtcNow.AddDays(_options.RefreshTokenExpirationDays)
+
 
 // ❌ WRONG: Never expiring tokens
 expires: DateTime.MaxValue  // Security risk!
