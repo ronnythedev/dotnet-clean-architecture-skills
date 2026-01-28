@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("pointofsale.api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cdb5b8d073ccafd7e4d3eaee59c938f1c98c059b")]
 [assembly: System.Reflection.AssemblyProductAttribute("pointofsale.api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("pointofsale.api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
