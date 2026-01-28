@@ -14,4 +14,7 @@ dotnet-clean-architecture-skills/skills/21-unit-testing/.DS_Store
 dotnet-clean-architecture-skills/skills/22-integration-testing/.DS_Store
 dotnet-clean-architecture-skills/skills/16.1-email-service-sendgrid/.DS_Store
 .DS_Store
-**/.DS_Store
+
+# Build outputs
+**/obj/
+**/bin/
