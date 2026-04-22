@@ -16,7 +16,8 @@ This collection of Claude Skills provides comprehensive templates and best pract
 | 4 | **domain-entity-generator** | Domain modeling | Entities, Value Objects, Factory methods |
 | 5 | **repository-pattern** | Data access abstraction | Repository interfaces, EF Core implementations |
 | 6 | **ef-core-configuration** | Database mapping | Fluent API, Relationships, Indexes |
-| 7 | **api-controller-generator** | REST API endpoints | Controllers, Authorization, Versioning |
+| 7.1 | **legacy-api-controllers** | REST API controllers | Controllers, Authorization, Versioning |
+| 7.2 | **minimal-api-endpoints** | Minimal API endpoints | MapGet/MapPost, Filters, Versioning |
 | 8 | **result-pattern** | Error handling | Result, Result<T>, Error types |
 | 9 | **domain-events-generator** | Event-driven design | Domain Events, Handlers, Outbox pattern |
 | 10 | **pipeline-behaviors** | Cross-cutting concerns | Logging, Validation, Transaction behaviors |
@@ -58,6 +59,21 @@ This collection of Claude Skills provides comprehensive templates and best pract
 |---|-------|-------------|---------------|
 | 21 | **unit-testing** | Unit tests | xUnit, NSubstitute, FluentAssertions |
 | 22 | **integration-testing** | Integration tests | WebApplicationFactory, Testcontainers, Respawn |
+
+### Cross-Cutting Skills
+
+| # | Skill | Description | Key Templates |
+|------|-------|-------------|---------------|
+| 23   | **logging-configuration** | Structured logging | Serilog, ILogger, Log enrichment |
+| 24   | **rate-limiting** | API protection | Fixed/Sliding window, Token bucket, Concurrency |
+
+### Database Skills
+
+| # | Skill | Description | Key Templates |
+|------|-------|-------------|---------------|
+| 25.1 | **postgresql-best-practices** | PostgreSQL optimization | Naming, Indexing, xmin concurrency, Extensions |
+| 25.2 | **sqlserver-best-practices** | SQL Server optimization | Naming, Indexing, rowversion, Temporal tables |
+| 26   | **options-pattern** | Typed configuration | IOptions, IOptionsSnapshot, IOptionsMonitor, Validation |
 
 ---
 
@@ -110,6 +126,7 @@ This collection of Claude Skills provides comprehensive templates and best pract
 | Entity Framework Core | 8+ | ORM (write side) |
 | Dapper | 2+ | Micro ORM (read side) |
 | PostgreSQL | 15+ | Database |
+| SQL Server | 2019+ | Database |
 | Quartz.NET | 3+ | Background jobs |
 | Serilog | 3+ | Logging |
 | xUnit | 2.6+ | Testing framework |
@@ -178,7 +195,7 @@ Once installed, ask Claude to apply the patterns to your specific use case. Each
 
 ## Credits
 
-Skills 25 (`postgresql-best-practices`) and 26 (`options-pattern`) were inspired by [johnpuksta/clean-architecture-agents](https://github.com/johnpuksta/clean-architecture-agents), a fork that extends this collection with a multi-agent orchestration system.
+Skills 25.1 (`postgresql-best-practices`) and 26 (`options-pattern`) were inspired by [johnpuksta/clean-architecture-agents](https://github.com/johnpuksta/clean-architecture-agents), a fork that extends this collection with a multi-agent orchestration system.
 
 ---
 
