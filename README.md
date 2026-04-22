@@ -118,17 +118,54 @@ This collection of Claude Skills provides comprehensive templates and best pract
 
 ---
 
-## Usage
+## Installation
 
-To use a skill with Claude Code you have some options
+### Option 1: Clone the repo (works with both Claude Code and GitHub Copilot)
 
-- For personal skills available across all projects, you can place them in `~/.claude/skills/`
-- Or just in `./skills/` in your project
-- Personally I like to place them inside the project's git repo, inside a `CLAUDE` directory and mention their location in the main `CLAUDE.md` file in the root of the repo.
+```bash
+git clone https://github.com/ronnydelgado/dotnet-clean-architecture-skills.git
+```
 
-Then ask Claude to apply the patterns to your specific use case.
+The repo structure works out of the box for both tools:
 
-Each skill contains:
+- **GitHub Copilot** reads skills from `skills/` at the repo root.
+- **Claude Code** reads skills from `.claude/skills/`, which is a symlink to `skills/`.
+
+> **Windows note:** Git symlinks require either Developer Mode enabled or running Git as administrator. If symlinks don't resolve, run `git config core.symlinks true` and re-clone.
+
+### Option 2: Copy individual skills into your project
+
+Pick the skills you need and copy them into the appropriate location for your tool:
+
+**Claude Code:**
+```bash
+# Copy a single skill
+cp -r skills/01-dotnet-clean-architecture your-project/.claude/skills/
+
+# Or copy all skills
+cp -r skills/* your-project/.claude/skills/
+```
+
+**GitHub Copilot:**
+```bash
+# Copy a single skill
+cp -r skills/01-dotnet-clean-architecture your-project/skills/
+
+# Or copy all skills
+cp -r skills/* your-project/skills/
+```
+
+### Option 3: Install globally for Claude Code
+
+Make skills available across all your projects:
+
+```bash
+cp -r skills/* ~/.claude/skills/
+```
+
+### Using the skills
+
+Once installed, ask Claude to apply the patterns to your specific use case. Each skill contains:
 - Overview and purpose
 - Quick reference table
 - Complete code templates

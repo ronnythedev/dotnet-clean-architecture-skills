@@ -1,18 +1,3 @@
-dotnet-clean-architecture-skills/.DS_Store
-dotnet-clean-architecture-skills/skills/.DS_Store
-dotnet-clean-architecture-skills/skills/11-fluent-validation/.DS_Store
-dotnet-clean-architecture-skills/skills/12-jwt-authentication/.DS_Store
-dotnet-clean-architecture-skills/skills/13-permission-authorization/.DS_Store
-dotnet-clean-architecture-skills/skills/14-outbox-pattern/.DS_Store
-dotnet-clean-architecture-skills/skills/15-quartz-background-jobs/.DS_Store
-dotnet-clean-architecture-skills/skills/16-email-service-sendgrid/.DS_Store
-dotnet-clean-architecture-skills/skills/17-health-checks/.DS_Store
-dotnet-clean-architecture-skills/skills/18-audit-trail/.DS_Store
-dotnet-clean-architecture-skills/skills/19-dapper-query-builder/.DS_Store
-dotnet-clean-architecture-skills/skills/20-specification-pattern/.DS_Store
-dotnet-clean-architecture-skills/skills/21-unit-testing/.DS_Store
-dotnet-clean-architecture-skills/skills/22-integration-testing/.DS_Store
-dotnet-clean-architecture-skills/skills/16.1-email-service-sendgrid/.DS_Store
 .DS_Store
 
 # Build outputs
