@@ -176,4 +176,10 @@ Once installed, ask Claude to apply the patterns to your specific use case. Each
 
 ---
 
+## Credits
+
+Skills 25 (`postgresql-best-practices`) and 26 (`options-pattern`) were adapted from [johnpuksta/clean-architecture-agents](https://github.com/johnpuksta/clean-architecture-agents), a fork that extends this collection with a multi-agent orchestration system.
+
+---
+
 _Have suggestions or want to contribute? Open an issue or PR on GitHub. Let's make .NET Clean Architecture accessible to everyone._
