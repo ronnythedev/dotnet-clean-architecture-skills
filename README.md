@@ -77,6 +77,25 @@ This collection of Claude Skills provides comprehensive templates and best pract
 
 ---
 
+## Recipes — Where to Start
+
+Skills are building blocks. Recipes show you **which skills to combine and in what order** for common tasks.
+
+| Recipe | What You Get |
+|--------|-------------|
+| [Scaffold a New Project](recipes/00-scaffold-new-project.md) | Complete solution structure with logging, health checks, and audit trail |
+| [Add a CRUD Feature](recipes/01-add-crud-feature.md) | Entity + commands + queries + validation + API — the most common workflow |
+| [Add JWT Authentication](recipes/02-add-authentication.md) | JWT tokens, refresh tokens, and permission-based authorization |
+| [Add Background Processing](recipes/03-add-background-processing.md) | Domain events with Outbox pattern and Quartz scheduled jobs |
+| [Add Email Notifications](recipes/04-add-email-notifications.md) | Transactional emails triggered by domain events |
+| [Add Testing](recipes/05-add-testing.md) | Unit tests with NSubstitute + integration tests with Testcontainers |
+
+**New project?** Start with Recipe 0, then Recipe 1. Everything else is optional and independent.
+
+See the full [Recipes guide](recipes/README.md) for the suggested order and dependency tree.
+
+---
+
 ## Architecture Overview
 
 ```
