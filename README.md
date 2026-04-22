@@ -1,8 +1,34 @@
-# .NET Clean Architecture Skills Collection
+# .NET Clean Architecture Skills
 
-## Overview
+**27 AI-ready skills** that teach your coding assistant how to generate production-grade .NET code — Clean Architecture, CQRS, DDD — without explaining the patterns every time.
 
-This collection of Claude Skills provides comprehensive templates and best practices for building .NET applications following Clean Architecture, CQRS, and Domain-Driven Design patterns.
+**Works with:** Claude Code | GitHub Copilot | Cursor
+
+### Before (plain prompt)
+
+> "Create a Product entity with name, price, and category"
+
+Your assistant generates a basic class with public setters, no validation, no events, inconsistent patterns.
+
+### After (with skills installed)
+
+> "Using skill `04-domain-entity-generator`, create a Product aggregate root with Name (required, max 200), Price (positive decimal), and a CategoryId foreign key"
+
+Your assistant generates a proper DDD entity with private setters, a `Create()` factory method, domain events, typed errors, and a repository interface — matching the patterns already in your codebase.
+
+### Get started in 30 seconds
+
+```bash
+# Clone into your project (Claude Code + Copilot)
+git clone https://github.com/ronnydelgado/dotnet-clean-architecture-skills.git
+
+# Or copy all skills globally (Claude Code)
+cp -r skills/* ~/.claude/skills/
+```
+
+Then follow [Recipe 0: Scaffold a New Project](recipes/00-scaffold-new-project.md) or jump to [Recipe 1: Add a CRUD Feature](recipes/01-add-crud-feature.md) if you already have a solution.
+
+---
 
 ## Skills Index
 
