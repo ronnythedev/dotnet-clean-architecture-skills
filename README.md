@@ -178,7 +178,7 @@ Once installed, ask Claude to apply the patterns to your specific use case. Each
 
 ## Credits
 
-Skills 25 (`postgresql-best-practices`) and 26 (`options-pattern`) were adapted from [johnpuksta/clean-architecture-agents](https://github.com/johnpuksta/clean-architecture-agents), a fork that extends this collection with a multi-agent orchestration system.
+Skills 25 (`postgresql-best-practices`) and 26 (`options-pattern`) were inspired by [johnpuksta/clean-architecture-agents](https://github.com/johnpuksta/clean-architecture-agents), a fork that extends this collection with a multi-agent orchestration system.
 
 ---
 
