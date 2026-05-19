@@ -1,0 +1,7 @@
+src/
+tests/
+scripts/
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+.npmignore
