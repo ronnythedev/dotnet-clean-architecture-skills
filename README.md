@@ -19,12 +19,13 @@ Your assistant generates a proper DDD entity with private setters, a `Create()` 
 ### Get started in 30 seconds
 
 ```bash
-# Clone into your project (Claude Code + Copilot)
+# Clone anywhere, then symlink every skill into ~/.claude/skills
 git clone https://github.com/ronnydelgado/dotnet-clean-architecture-skills.git
-
-# Or copy all skills globally (Claude Code)
-cp -r skills/* ~/.claude/skills/
+cd dotnet-clean-architecture-skills
+./scripts/link-skills.sh
 ```
+
+That installs all skills globally for Claude Code. Prefer a per-project install or want to use Copilot/Cursor? See [Installation](#installation) below.
 
 Then follow [Recipe 0: Scaffold a New Project](recipes/00-scaffold-new-project.md) or jump to [Recipe 1: Add a CRUD Feature](recipes/01-add-crud-feature.md) if you already have a solution.
 
@@ -182,20 +183,41 @@ See the full [Recipes guide](recipes/README.md) for the suggested order and depe
 
 ## Installation
 
-### Option 1: Clone the repo (works with both Claude Code and GitHub Copilot)
+The repo ships a plugin manifest (`.claude-plugin/plugin.json`) and three install scripts under `scripts/`. Pick whichever option fits your setup.
+
+### Option 1: Symlink globally for Claude Code (recommended)
+
+Clone once, run the linker, get every skill in `~/.claude/skills` available across all your projects:
+
+```bash
+git clone https://github.com/ronnydelgado/dotnet-clean-architecture-skills.git
+cd dotnet-clean-architecture-skills
+./scripts/link-skills.sh
+```
+
+The linker is re-runnable (symlinks are refreshed on `git pull`) and ships an unlinker:
+
+```bash
+./scripts/unlink-skills.sh   # removes ONLY the symlinks pointing back into this repo
+./scripts/list-skills.sh     # prints every SKILL.md path, handy for piping into other tools
+```
+
+The unlinker is safe: it never touches symlinks that point elsewhere or real directories you've installed by other means.
+
+### Option 2: Clone in-place (Claude Code + GitHub Copilot)
+
+If you'd rather work on top of the repo directly (e.g. you're tweaking skills):
 
 ```bash
 git clone https://github.com/ronnydelgado/dotnet-clean-architecture-skills.git
 ```
-
-The repo structure works out of the box for both tools:
 
 - **GitHub Copilot** reads skills from `skills/` at the repo root.
 - **Claude Code** reads skills from `.claude/skills/`, which is a symlink to `skills/`.
 
 > **Windows note:** Git symlinks require either Developer Mode enabled or running Git as administrator. If symlinks don't resolve, run `git config core.symlinks true` and re-clone.
 
-### Option 2: Copy individual skills into your project
+### Option 3: Copy individual skills into your project
 
 Pick the skills you need and copy them into the appropriate location for your tool:
 
@@ -217,13 +239,9 @@ cp -r skills/01-dotnet-clean-architecture your-project/skills/
 cp -r skills/* your-project/skills/
 ```
 
-### Option 3: Install globally for Claude Code
+### The plugin manifest
 
-Make skills available across all your projects:
-
-```bash
-cp -r skills/* ~/.claude/skills/
-```
+`.claude-plugin/plugin.json` declares the plugin name and enumerates every skill path. It's what makes the repo discoverable by Claude Code's plugin loader and by third-party installers that consume the same manifest format. If you add or rename a skill, update the manifest so external tooling stays in sync.
 
 ### Using the skills
 
