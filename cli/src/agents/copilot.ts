@@ -20,7 +20,7 @@ export class CopilotAgent implements Agent {
     }
 
     const dir = join(opts.projectDir, ".github", "instructions");
-    const target = join(dir, `${skill.name}.instructions.md`);
+    const target = join(dir, `${skill.id}.instructions.md`);
 
     mkdirSync(dir, { recursive: true });
 

@@ -20,7 +20,7 @@ export class CursorAgent implements Agent {
     }
 
     const rulesDir = join(opts.projectDir, ".cursor", "rules");
-    const target = join(rulesDir, `${skill.name}.mdc`);
+    const target = join(rulesDir, `${skill.id}.mdc`);
 
     mkdirSync(rulesDir, { recursive: true });
 

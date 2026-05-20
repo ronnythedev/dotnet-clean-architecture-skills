@@ -55,13 +55,13 @@ export async function addCommand(cwd: string = process.cwd()): Promise<void> {
       store.append({
         v: 1,
         installedAt: new Date().toISOString(),
-        skill: skill.name,
+        skill: skill.id,
         agent: agent.id,
         scope,
         method,
         target: result.target
       });
-      installs.push({ agent: agent.id, skill: skill.name, target: result.target });
+      installs.push({ agent: agent.id, skill: skill.id, target: result.target });
     }
   }
 

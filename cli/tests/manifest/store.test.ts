@@ -53,4 +53,17 @@ describe("ManifestStore", () => {
     store.append({ v: 1, installedAt: "t", skill: "a", agent: "claude-code", scope: "global", method: "copy", target: "/p" });
     expect(existsSync(join(tmp, ".dotnet-clean-arch", "manifest.json"))).toBe(true);
   });
+
+  it("remove() must use value-equality — references from read() are new objects each call", () => {
+    store.append({ v: 1, installedAt: "t", skill: "a", agent: "claude-code", scope: "global", method: "copy", target: "/p" });
+
+    // Simulate the removeCommand pattern: capture an entry from read(),
+    // then ask the store to remove it. Reference equality would fail here
+    // because store.remove() does its own read() and gets a different
+    // object reference than the one we captured.
+    const captured = store.read().entries[0]!;
+    store.remove(e => e.target === captured.target);
+
+    expect(store.read().entries).toEqual([]);
+  });
 });

@@ -23,7 +23,7 @@ export class ClaudeCodeAgent implements Agent {
       ? join(this.home, ".claude", "skills")
       : join(opts.projectDir, ".claude", "skills");
 
-    const target = join(root, skill.name);
+    const target = join(root, skill.id);
 
     if (opts.method === "symlink") {
       symlinkOrCopyDir(skill.sourceDir, target);

@@ -37,13 +37,13 @@ describe("CopilotAgent", () => {
     expect(agent.detect(tmp)).toBe(true);
   });
 
-  it("install writes .github/instructions/<name>.instructions.md", async () => {
+  it("install writes .github/instructions/<id>.instructions.md", async () => {
     const skill = buildSkill(tmp);
     const { target } = await agent.install(skill, {
       scope: "project", method: "copy", projectDir: tmp
     });
 
-    expect(target).toBe(join(tmp, ".github", "instructions", "my-skill.instructions.md"));
+    expect(target).toBe(join(tmp, ".github", "instructions", "01-x.instructions.md"));
     expect(existsSync(target)).toBe(true);
   });
 

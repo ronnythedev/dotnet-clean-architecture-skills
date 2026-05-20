@@ -38,13 +38,13 @@ describe("ClaudeCodeAgent", () => {
     expect(agent.detect(join(tmp, "proj"))).toBe(true);
   });
 
-  it("install copies skill folder to ~/.claude/skills/<name> (global, copy)", async () => {
+  it("install copies skill folder to ~/.claude/skills/<id> (global, copy)", async () => {
     const skill = buildSkill(tmp);
     const result = await agent.install(skill, {
       scope: "global", method: "copy", projectDir: tmp
     });
 
-    const expected = join(tmp, "home", ".claude", "skills", "test-skill");
+    const expected = join(tmp, "home", ".claude", "skills", "01-test-skill");
     expect(result.target).toBe(expected);
     expect(existsSync(join(expected, "SKILL.md"))).toBe(true);
     expect(readFileSync(join(expected, "extra.md"), "utf8")).toBe("extra content");
@@ -68,7 +68,7 @@ describe("ClaudeCodeAgent", () => {
       scope: "project", method: "copy", projectDir: proj
     });
 
-    expect(result.target).toBe(join(proj, ".claude", "skills", "test-skill"));
+    expect(result.target).toBe(join(proj, ".claude", "skills", "01-test-skill"));
   });
 
   it("uninstall removes a previously-installed skill", async () => {

@@ -44,7 +44,7 @@ export async function removeCommand(): Promise<void> {
     }
 
     await agent.uninstall(entry.target);
-    store.remove(e => e === entry);
+    store.remove(e => e.target === entry.target);
     removed++;
   }
 

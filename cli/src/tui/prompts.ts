@@ -22,10 +22,14 @@ export async function chooseAgents(all: Agent[], detected: Agent[]): Promise<Age
     hint: detected.includes(a) ? undefined : "not detected in cwd"
   }));
 
+  const initialValues = detected.some(a => a.id === "claude-code")
+    ? ["claude-code"]
+    : [];
+
   const selected = await multiselect({
-    message: "Which agents do you want to install into?",
+    message: "Which agents do you want to install into? (Space toggles, Enter confirms)",
     options,
-    initialValues: detected.length > 0 ? detected.map(a => a.id) : [all[0]!.id],
+    initialValues,
     required: true
   });
 
@@ -36,12 +40,11 @@ export async function chooseAgents(all: Agent[], detected: Agent[]): Promise<Age
 export async function chooseSkills(skills: Skill[]): Promise<Skill[]> {
   const options = skills.map(s => ({
     value: s.id,
-    label: s.id,
-    hint: s.description.length > 80 ? s.description.slice(0, 77) + "..." : s.description
+    label: s.id
   }));
 
   const selected = await multiselect({
-    message: "Which skills do you want to install?",
+    message: `Which skills do you want to install? (${skills.length} available — Space toggles, Enter confirms)`,
     options,
     initialValues: skills.map(s => s.id),
     required: true

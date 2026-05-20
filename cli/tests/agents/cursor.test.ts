@@ -43,13 +43,13 @@ describe("CursorAgent", () => {
     expect(agent.detect(tmp)).toBe(false);
   });
 
-  it("install writes a .mdc file to .cursor/rules/<name>.mdc", async () => {
+  it("install writes a .mdc file to .cursor/rules/<id>.mdc", async () => {
     const skill = buildSkill(tmp);
     const { target } = await agent.install(skill, {
       scope: "project", method: "copy", projectDir: tmp
     });
 
-    expect(target).toBe(join(tmp, ".cursor", "rules", "my-skill.mdc"));
+    expect(target).toBe(join(tmp, ".cursor", "rules", "01-x.mdc"));
     expect(existsSync(target)).toBe(true);
   });
 

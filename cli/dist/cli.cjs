@@ -6843,7 +6843,7 @@ var ClaudeCodeAgent = class {
   }
   async install(skill, opts) {
     const root = opts.scope === "global" ? (0, import_node_path3.join)(this.home, ".claude", "skills") : (0, import_node_path3.join)(opts.projectDir, ".claude", "skills");
-    const target = (0, import_node_path3.join)(root, skill.name);
+    const target = (0, import_node_path3.join)(root, skill.id);
     if (opts.method === "symlink") {
       symlinkOrCopyDir(skill.sourceDir, target);
     } else {
@@ -6874,7 +6874,7 @@ var CursorAgent = class {
       throw new Error(`Cursor only supports project scope, got: ${opts.scope}`);
     }
     const rulesDir = (0, import_node_path4.join)(opts.projectDir, ".cursor", "rules");
-    const target = (0, import_node_path4.join)(rulesDir, `${skill.name}.mdc`);
+    const target = (0, import_node_path4.join)(rulesDir, `${skill.id}.mdc`);
     (0, import_node_fs4.mkdirSync)(rulesDir, { recursive: true });
     const content = import_gray_matter2.default.stringify(skill.body, {
       description: skill.description
@@ -6904,7 +6904,7 @@ var CopilotAgent = class {
       throw new Error(`Copilot only supports project scope, got: ${opts.scope}`);
     }
     const dir = (0, import_node_path5.join)(opts.projectDir, ".github", "instructions");
-    const target = (0, import_node_path5.join)(dir, `${skill.name}.instructions.md`);
+    const target = (0, import_node_path5.join)(dir, `${skill.id}.instructions.md`);
     (0, import_node_fs5.mkdirSync)(dir, { recursive: true });
     const body = `> ${skill.description}
 
@@ -7540,10 +7540,11 @@ async function chooseAgents(all, detected) {
     label: a3.displayName + (detected.includes(a3) ? "  (detected)" : ""),
     hint: detected.includes(a3) ? void 0 : "not detected in cwd"
   }));
+  const initialValues = detected.some((a3) => a3.id === "claude-code") ? ["claude-code"] : [];
   const selected = await ae({
-    message: "Which agents do you want to install into?",
+    message: "Which agents do you want to install into? (Space toggles, Enter confirms)",
     options: options2,
-    initialValues: detected.length > 0 ? detected.map((a3) => a3.id) : [all[0].id],
+    initialValues,
     required: true
   });
   if (lD(selected)) fail("Cancelled.");
@@ -7552,11 +7553,10 @@ async function chooseAgents(all, detected) {
 async function chooseSkills(skills) {
   const options2 = skills.map((s) => ({
     value: s.id,
-    label: s.id,
-    hint: s.description.length > 80 ? s.description.slice(0, 77) + "..." : s.description
+    label: s.id
   }));
   const selected = await ae({
-    message: "Which skills do you want to install?",
+    message: `Which skills do you want to install? (${skills.length} available \u2014 Space toggles, Enter confirms)`,
     options: options2,
     initialValues: skills.map((s) => s.id),
     required: true
@@ -7637,13 +7637,13 @@ async function addCommand(cwd = process.cwd()) {
       store.append({
         v: 1,
         installedAt: (/* @__PURE__ */ new Date()).toISOString(),
-        skill: skill.name,
+        skill: skill.id,
         agent: agent.id,
         scope,
         method,
         target: result.target
       });
-      installs.push({ agent: agent.id, skill: skill.name, target: result.target });
+      installs.push({ agent: agent.id, skill: skill.id, target: result.target });
     }
   }
   endTui(`Installed ${installs.length} skill(s). Run \`npx dotnet-clean-arch remove\` to reverse.`);
@@ -7685,7 +7685,7 @@ async function removeCommand() {
       continue;
     }
     await agent.uninstall(entry.target);
-    store.remove((e2) => e2 === entry);
+    store.remove((e2) => e2.target === entry.target);
     removed++;
   }
   $e(`Removed ${removed} install(s).`);
