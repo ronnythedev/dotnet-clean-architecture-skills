@@ -1,6 +1,6 @@
 {
   "name": "dotnet-clean-arch",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Install .NET Clean Architecture skills into Claude Code, Cursor, and GitHub Copilot via an interactive TUI.",
   "type": "module",
   "bin": {
@@ -44,6 +44,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ronnydelgado/dotnet-clean-architecture-skills"
+    "url": "https://github.com/ronnythedev/dotnet-clean-architecture-skills"
   }
 }

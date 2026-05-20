@@ -1,6 +1,6 @@
 # dotnet-clean-arch
 
-Interactive installer for the [.NET Clean Architecture skills](https://github.com/ronnydelgado/dotnet-clean-architecture-skills) — installs them into Claude Code, Cursor, or GitHub Copilot via a TUI with multi-select, agent auto-detection, and scope/method prompts.
+Interactive installer for the [.NET Clean Architecture skills](https://github.com/ronnythedev/dotnet-clean-architecture-skills) — installs them into Claude Code, Cursor, or GitHub Copilot via a TUI with multi-select, agent auto-detection, and scope/method prompts.
 
 ## Quickstart
 
@@ -32,4 +32,4 @@ The CLI records every install in `~/.dotnet-clean-arch/manifest.json`. `npx dotn
 
 ## Source of truth
 
-The skill content itself lives at https://github.com/ronnydelgado/dotnet-clean-architecture-skills. This package bundles a frozen snapshot for offline installs; the package version reflects the skills snapshot it ships with.
+The skill content itself lives at https://github.com/ronnythedev/dotnet-clean-architecture-skills. This package bundles a frozen snapshot for offline installs; the package version reflects the skills snapshot it ships with.

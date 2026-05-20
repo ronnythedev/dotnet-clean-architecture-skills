@@ -20,7 +20,7 @@ Your assistant generates a proper DDD entity with private setters, a `Create()` 
 
 ```bash
 # Clone anywhere, then symlink every skill into ~/.claude/skills
-git clone https://github.com/ronnydelgado/dotnet-clean-architecture-skills.git
+git clone https://github.com/ronnythedev/dotnet-clean-architecture-skills.git
 cd dotnet-clean-architecture-skills
 ./scripts/link-skills.sh
 ```
@@ -193,7 +193,7 @@ The repo ships a plugin manifest (`.claude-plugin/plugin.json`) and three instal
 Clone once, run the linker, get every skill in `~/.claude/skills` available across all your projects:
 
 ```bash
-git clone https://github.com/ronnydelgado/dotnet-clean-architecture-skills.git
+git clone https://github.com/ronnythedev/dotnet-clean-architecture-skills.git
 cd dotnet-clean-architecture-skills
 ./scripts/link-skills.sh
 ```
@@ -212,7 +212,7 @@ The unlinker is safe: it never touches symlinks that point elsewhere or real dir
 If you'd rather work on top of the repo directly (e.g. you're tweaking skills):
 
 ```bash
-git clone https://github.com/ronnydelgado/dotnet-clean-architecture-skills.git
+git clone https://github.com/ronnythedev/dotnet-clean-architecture-skills.git
 ```
 
 - **GitHub Copilot** reads skills from `skills/` at the repo root.
