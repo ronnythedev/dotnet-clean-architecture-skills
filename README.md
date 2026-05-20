@@ -12,7 +12,7 @@ Your assistant generates a basic class with public setters, no validation, no ev
 
 ### After (with skills installed)
 
-> "Using skill `04-domain-entity-generator`, create a Product aggregate root with Name (required, max 200), Price (positive decimal), and a CategoryId foreign key"
+> "Using skill `04-dotnet-domain-entity-generator`, create a Product aggregate root with Name (required, max 200), Price (positive decimal), and a CategoryId foreign key"
 
 Your assistant generates a proper DDD entity with private setters, a `Create()` factory method, domain events, typed errors, and a repository interface — matching the patterns already in your codebase.
 
@@ -38,69 +38,69 @@ Then follow [Recipe 0: Scaffold a New Project](recipes/00-scaffold-new-project.m
 | # | Skill | Description | Key Templates |
 |---|-------|-------------|---------------|
 | 1 | **dotnet-clean-architecture** | Project scaffolding | Solution structure, layer setup, DI configuration |
-| 2 | **cqrs-command-generator** | Write operations | Commands, Handlers, Validators |
-| 3 | **cqrs-query-generator** | Read operations | Queries, Dapper SQL, Response DTOs |
-| 4 | **domain-entity-generator** | Domain modeling | Entities, Value Objects, Factory methods |
-| 5 | **repository-pattern** | Data access abstraction | Repository interfaces, EF Core implementations |
-| 6 | **ef-core-configuration** | Database mapping | Fluent API, Relationships, Indexes |
-| 7.1 | **legacy-api-controllers** | REST API controllers | Controllers, Authorization, Versioning |
-| 7.2 | **minimal-api-endpoints** | Minimal API endpoints | MapGet/MapPost, Filters, Versioning |
-| 8 | **result-pattern** | Error handling | Result, Result<T>, Error types |
-| 9 | **domain-events-generator** | Event-driven design | Domain Events, Handlers, Outbox pattern |
-| 10 | **pipeline-behaviors** | Cross-cutting concerns | Logging, Validation, Transaction behaviors |
+| 2 | **dotnet-cqrs-command-generator** | Write operations | Commands, Handlers, Validators |
+| 3 | **dotnet-cqrs-query-generator** | Read operations | Queries, Dapper SQL, Response DTOs |
+| 4 | **dotnet-domain-entity-generator** | Domain modeling | Entities, Value Objects, Factory methods |
+| 5 | **dotnet-repository-pattern** | Data access abstraction | Repository interfaces, EF Core implementations |
+| 6 | **dotnet-ef-core-configuration** | Database mapping | Fluent API, Relationships, Indexes |
+| 7.1 | **dotnet-legacy-api-controllers** | REST API controllers | Controllers, Authorization, Versioning |
+| 7.2 | **dotnet-minimal-api-endpoints** | Minimal API endpoints | MapGet/MapPost, Filters, Versioning |
+| 8 | **dotnet-result-pattern** | Error handling | Result, Result<T>, Error types |
+| 9 | **dotnet-domain-events-generator** | Event-driven design | Domain Events, Handlers, Outbox pattern |
+| 10 | **dotnet-pipeline-behaviors** | Cross-cutting concerns | Logging, Validation, Transaction behaviors |
 
 ### Validation Skills
 
 | # | Skill | Description | Key Templates |
 |---|-------|-------------|---------------|
-| 11 | **fluent-validation** | Input validation | AbstractValidator, Custom validators, Async validation |
+| 11 | **dotnet-fluent-validation** | Input validation | AbstractValidator, Custom validators, Async validation |
 
 ### Security Skills
 
 | # | Skill | Description | Key Templates |
 |---|-------|-------------|---------------|
-| 12 | **jwt-authentication** | JWT Bearer auth | JwtService, Token validation, Refresh tokens |
-| 13 | **permission-authorization** | Permission-based access | HasPermission attribute, Policy provider |
+| 12 | **dotnet-jwt-authentication** | JWT Bearer auth | JwtService, Token validation, Refresh tokens |
+| 13 | **dotnet-permission-authorization** | Permission-based access | HasPermission attribute, Policy provider |
 
 ### Infrastructure Skills
 
 | # | Skill | Description | Key Templates |
 |------|-------|-------------|---------------|
-| 14   | **outbox-pattern** | Reliable messaging | OutboxMessage, Processor job, Idempotency |
-| 15   | **quartz-background-jobs** | Scheduled jobs | IJob, Cron scheduling, Job configuration |
-| 16.1 | **email-service-sendgrid** | Email integration | IEmailService, SendGrid, Templates |
-| 16.2 | **email-service-aws-ses** | Email integration | IEmailService, AWS SES, Local Templates |
-| 17   | **health-checks** | Dependency monitoring | PostgreSQL, HTTP, Custom checks |
-| 18   | **audit-trail** | Change tracking | IAuditable, EF interceptor, Soft delete |
+| 14   | **dotnet-outbox-pattern** | Reliable messaging | OutboxMessage, Processor job, Idempotency |
+| 15   | **dotnet-quartz-background-jobs** | Scheduled jobs | IJob, Cron scheduling, Job configuration |
+| 16.1 | **dotnet-email-service-sendgrid** | Email integration | IEmailService, SendGrid, Templates |
+| 16.2 | **dotnet-email-service-aws-ses** | Email integration | IEmailService, AWS SES, Local Templates |
+| 17   | **dotnet-health-checks** | Dependency monitoring | PostgreSQL, HTTP, Custom checks |
+| 18   | **dotnet-audit-trail** | Change tracking | IAuditable, EF interceptor, Soft delete |
 
 ### Data Access Skills
 
 | # | Skill | Description | Key Templates |
 |---|-------|-------------|---------------|
-| 19 | **dapper-query-builder** | Optimized reads | Multi-mapping, Pagination, CTEs |
-| 20 | **specification-pattern** | Query encapsulation | ISpecification, Composable queries |
+| 19 | **dotnet-dapper-query-builder** | Optimized reads | Multi-mapping, Pagination, CTEs |
+| 20 | **dotnet-specification-pattern** | Query encapsulation | ISpecification, Composable queries |
 
 ### Testing Skills
 
 | # | Skill | Description | Key Templates |
 |---|-------|-------------|---------------|
-| 21 | **unit-testing** | Unit tests | xUnit, NSubstitute, FluentAssertions |
-| 22 | **integration-testing** | Integration tests | WebApplicationFactory, Testcontainers, Respawn |
+| 21 | **dotnet-unit-testing** | Unit tests | xUnit, NSubstitute, FluentAssertions |
+| 22 | **dotnet-integration-testing** | Integration tests | WebApplicationFactory, Testcontainers, Respawn |
 
 ### Cross-Cutting Skills
 
 | # | Skill | Description | Key Templates |
 |------|-------|-------------|---------------|
-| 23   | **logging-configuration** | Structured logging | Serilog, ILogger, Log enrichment |
-| 24   | **rate-limiting** | API protection | Fixed/Sliding window, Token bucket, Concurrency |
+| 23   | **dotnet-logging-configuration** | Structured logging | Serilog, ILogger, Log enrichment |
+| 24   | **dotnet-rate-limiting** | API protection | Fixed/Sliding window, Token bucket, Concurrency |
 
 ### Database Skills
 
 | # | Skill | Description | Key Templates |
 |------|-------|-------------|---------------|
-| 25.1 | **postgresql-best-practices** | PostgreSQL optimization | Naming, Indexing, xmin concurrency, Extensions |
-| 25.2 | **sqlserver-best-practices** | SQL Server optimization | Naming, Indexing, rowversion, Temporal tables |
-| 26   | **options-pattern** | Typed configuration | IOptions, IOptionsSnapshot, IOptionsMonitor, Validation |
+| 25.1 | **dotnet-postgresql-best-practices** | PostgreSQL optimization | Naming, Indexing, xmin concurrency, Extensions |
+| 25.2 | **dotnet-sqlserver-best-practices** | SQL Server optimization | Naming, Indexing, rowversion, Temporal tables |
+| 26   | **dotnet-options-pattern** | Typed configuration | IOptions, IOptionsSnapshot, IOptionsMonitor, Validation |
 
 ---
 
@@ -126,38 +126,38 @@ See the full [Recipes guide](recipes/README.md) for the suggested order and depe
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                          API Layer                               │
-│  • Controllers (api-controller-generator)                        │
-│  • Request/Response DTOs                                         │
-│  • Middleware                                                    │
-│  • Authentication (jwt-authentication)                           │
-│  • Authorization (permission-authorization)                      │
-├─────────────────────────────────────────────────────────────────┤
-│                      Application Layer                           │
-│  • Commands (cqrs-command-generator)                             │
-│  • Queries (cqrs-query-generator)                                │
-│  • Validators (fluent-validation)                                │
-│  • Pipeline Behaviors (pipeline-behaviors)                       │
-│  • Event Handlers (domain-events-generator)                      │
-├─────────────────────────────────────────────────────────────────┤
-│                    Infrastructure Layer                          │
-│  • Repositories (repository-pattern)                             │
-│  • EF Core Configurations (ef-core-configuration)                │
-│  • Dapper Queries (dapper-query-builder)                         │
-│  • Outbox Pattern (outbox-pattern)                               │
-│  • Background Jobs (quartz-background-jobs)                      │
-│  • Email Service (email-service)                                 │
-│  • Audit Trail (audit-trail)                                     │
-│  • Health Checks (health-checks)                                 │
-├─────────────────────────────────────────────────────────────────┤
-│                       Domain Layer                               │
-│  • Entities (domain-entity-generator)                            │
-│  • Value Objects (domain-entity-generator)                       │
-│  • Domain Events (domain-events-generator)                       │
-│  • Result Pattern (result-pattern)                               │
-│  • Specifications (specification-pattern)                        │
-└─────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│                          API Layer                                │
+│  • Controllers (dotnet-legacy-api-controllers)                    │
+│  • Request/Response DTOs                                          │
+│  • Middleware                                                     │
+│  • Authentication (dotnet-jwt-authentication)                     │
+│  • Authorization (dotnet-permission-authorization)                │
+├───────────────────────────────────────────────────────────────────┤
+│                      Application Layer                            │
+│  • Commands (dotnet-cqrs-command-generator)                       │
+│  • Queries (dotnet-cqrs-query-generator)                          │
+│  • Validators (dotnet-fluent-validation)                          │
+│  • Pipeline Behaviors (dotnet-pipeline-behaviors)                 │
+│  • Event Handlers (dotnet-domain-events-generator)                │
+├───────────────────────────────────────────────────────────────────┤
+│                    Infrastructure Layer                           │
+│  • Repositories (dotnet-repository-pattern)                       │
+│  • EF Core Configurations (dotnet-ef-core-configuration)          │
+│  • Dapper Queries (dotnet-dapper-query-builder)                   │
+│  • Outbox Pattern (dotnet-outbox-pattern)                         │
+│  • Background Jobs (dotnet-quartz-background-jobs)                │
+│  • Email Service (dotnet-email-service-*)                         │
+│  • Audit Trail (dotnet-audit-trail)                               │
+│  • Health Checks (dotnet-health-checks)                           │
+├───────────────────────────────────────────────────────────────────┤
+│                       Domain Layer                                │
+│  • Entities (dotnet-domain-entity-generator)                      │
+│  • Value Objects (dotnet-domain-entity-generator)                 │
+│  • Domain Events (dotnet-domain-events-generator)                 │
+│  • Result Pattern (dotnet-result-pattern)                         │
+│  • Specifications (dotnet-specification-pattern)                  │
+└───────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -258,7 +258,7 @@ Once installed, ask Claude to apply the patterns to your specific use case. Each
 
 ## Credits
 
-Skills 25.1 (`postgresql-best-practices`) and 26 (`options-pattern`) were inspired by [johnpuksta/clean-architecture-agents](https://github.com/johnpuksta/clean-architecture-agents), a fork that extends this collection with a multi-agent orchestration system.
+Skills 25.1 (`dotnet-postgresql-best-practices`) and 26 (`dotnet-options-pattern`) were inspired by [johnpuksta/clean-architecture-agents](https://github.com/johnpuksta/clean-architecture-agents), a fork that extends this collection with a multi-agent orchestration system.
 
 ---
 

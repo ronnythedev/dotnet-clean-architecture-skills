@@ -6,13 +6,13 @@ Thanks for contributing! This guide covers the conventions every skill follows s
 
 ```
 skills/
-  NN-skill-name/SKILL.md          # primary skill
-  NN.V-skill-name-variant/SKILL.md # variant (same topic, different approach)
+  NN-dotnet-skill-name/SKILL.md          # primary skill
+  NN.V-dotnet-skill-name-variant/SKILL.md # variant (same topic, different approach)
 ```
 
 - **NN** is a two-digit sequential number (`01`-`99`). Pick the next available number.
-- **NN.V** is used for variants of the same concept (e.g., `16.1-email-service-sendgrid` / `16.2-email-service-aws-ses`).
-- Skill names are lowercase, hyphen-separated.
+- **NN.V** is used for variants of the same concept (e.g., `16.1-dotnet-email-service-sendgrid` / `16.2-dotnet-email-service-aws-ses`).
+- Skill names are lowercase, hyphen-separated, and **must start with `dotnet-`** after the number prefix. The `dotnet-` namespace makes skills discoverable across editors ("use the dotnet- skill for CQRS commands") and avoids collisions with other skill packs.
 - The file is always called `SKILL.md` (not `README.md`).
 
 ## Frontmatter
@@ -21,7 +21,7 @@ Every skill starts with YAML frontmatter:
 
 ```yaml
 ---
-name: my-skill-name
+name: dotnet-my-skill-name
 description: "One sentence. What it generates and which pattern it uses."
 version: 1.0.0
 language: C#
@@ -32,7 +32,7 @@ dependencies: PackageA, PackageB
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| `name` | Yes | Lowercase, hyphenated. Must match the directory suffix (e.g., `cqrs-command-generator`). |
+| `name` | Yes | Lowercase, hyphenated. Must match the directory suffix (e.g., `dotnet-cqrs-command-generator`). |
 | `description` | Yes | ~100-150 chars. Starts with a verb: *Generates*, *Implements*, *Configures*, *Scaffolds*. |
 | `version` | Yes | Semver. Start at `1.0.0`. |
 | `language` | Yes | `C#` for this repo. |
@@ -100,14 +100,14 @@ Critical Rules are numbered imperatives the AI must follow when using the skill.
 
 ## Registering Your Skill
 
-After creating `skills/NN-my-skill/SKILL.md`:
+After creating `skills/NN-dotnet-my-skill/SKILL.md`:
 
 1. Add a row to the **Skills Index** table in `README.md`.
 2. Add `## Related Skills` references in other skills that pair with yours.
 
 ## Quick Checklist
 
-- [ ] Directory follows `NN-skill-name/SKILL.md` format
+- [ ] Directory follows `NN-dotnet-skill-name/SKILL.md` format (skill name starts with `dotnet-`)
 - [ ] Frontmatter has all required fields
 - [ ] Sections follow the standard order
 - [ ] `{placeholder}` names match the table above

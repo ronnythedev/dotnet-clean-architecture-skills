@@ -8,14 +8,14 @@ Add comprehensive test coverage for an existing feature — from handler unit te
 
 | Order | Skill | Purpose |
 |-------|-------|---------|
-| 1 | `21-unit-testing` | Handler tests with xUnit and NSubstitute |
-| 2 | `22-integration-testing` | API tests with WebApplicationFactory and Testcontainers |
+| 1 | `21-dotnet-unit-testing` | Handler tests with xUnit and NSubstitute |
+| 2 | `22-dotnet-integration-testing` | API tests with WebApplicationFactory and Testcontainers |
 
 ## Steps
 
 ### Step 1 — Add unit tests for command handlers
 
-> Using skill `21-unit-testing`, create unit tests for `Create{Entity}CommandHandler`. Mock the repository and unit of work with NSubstitute. Test success, validation failure, and domain error scenarios using Arrange-Act-Assert.
+> Using skill `21-dotnet-unit-testing`, create unit tests for `Create{Entity}CommandHandler`. Mock the repository and unit of work with NSubstitute. Test success, validation failure, and domain error scenarios using Arrange-Act-Assert.
 
 **Verify:** Tests cover:
 - Happy path: returns `Result.Success` with the entity ID
@@ -25,19 +25,19 @@ Add comprehensive test coverage for an existing feature — from handler unit te
 
 ### Step 2 — Add unit tests for query handlers
 
-> Using skill `21-unit-testing`, create unit tests for `Get{Entity}ByIdQueryHandler`. Mock `ISqlConnectionFactory`. Test that not-found returns the correct error.
+> Using skill `21-dotnet-unit-testing`, create unit tests for `Get{Entity}ByIdQueryHandler`. Mock `ISqlConnectionFactory`. Test that not-found returns the correct error.
 
 **Verify:** Tests verify the handler returns a mapped DTO on success and a typed error when the entity doesn't exist.
 
 ### Step 3 — Set up the integration test infrastructure
 
-> Using skill `22-integration-testing`, create the test project with `WebApplicationFactory`, Testcontainers for the database, and Respawn for database cleanup between tests. Add an `IntegrationTestBase` class.
+> Using skill `22-dotnet-integration-testing`, create the test project with `WebApplicationFactory`, Testcontainers for the database, and Respawn for database cleanup between tests. Add an `IntegrationTestBase` class.
 
 **Verify:** The test project references the API project. `IntegrationTestWebAppFactory` starts a real database in Docker. `Respawn` cleans tables between tests. Tests can make HTTP requests via `HttpClient`.
 
 ### Step 4 — Add integration tests for endpoints
 
-> Using skill `22-integration-testing`, create integration tests for the `{Entity}` endpoints. Test `POST` (create), `GET /{id}` (read), `PUT /{id}` (update), and `DELETE /{id}`. Each test hits the real API and database.
+> Using skill `22-dotnet-integration-testing`, create integration tests for the `{Entity}` endpoints. Test `POST` (create), `GET /{id}` (read), `PUT /{id}` (update), and `DELETE /{id}`. Each test hits the real API and database.
 
 **Verify:** Tests cover:
 - Create returns `201 Created` with a valid ID
