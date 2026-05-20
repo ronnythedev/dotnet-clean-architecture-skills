@@ -33,6 +33,8 @@ Then follow [Recipe 0: Scaffold a New Project](recipes/00-scaffold-new-project.m
 
 ## Skills Index
 
+> **Why the `dotnet-` prefix?** Every skill in this collection is namespaced with `dotnet-` so the pack is identifiable in mixed-pack environments and addressable in conversation. Instead of remembering an exact skill name, you can say *"use the `dotnet-` skill for CQRS commands"* and the agent will narrow down the candidates. The prefix also prevents collisions with other skill packs that might use generic names like `repository-pattern` or `unit-testing`. Skill folders follow the pattern `<NN>-dotnet-<topic>/`, where the numeric prefix establishes a stable learning order and the `dotnet-<topic>` portion matches the `name` field in each skill's frontmatter.
+
 ### Core Architecture Skills
 
 | # | Skill | Description | Key Templates |
@@ -128,6 +130,7 @@ See the full [Recipes guide](recipes/README.md) for the suggested order and depe
 ```
 ┌───────────────────────────────────────────────────────────────────┐
 │                          API Layer                                │
+│  • Endpoints (dotnet-minimal-api-endpoints)                       │
 │  • Controllers (dotnet-legacy-api-controllers)                    │
 │  • Request/Response DTOs                                          │
 │  • Middleware                                                     │
