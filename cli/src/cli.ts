@@ -1,5 +1,7 @@
 import { Command } from "commander";
 import { addCommand } from "./commands/add.js";
+import { removeCommand } from "./commands/remove.js";
+import { listCommand } from "./commands/list.js";
 
 const program = new Command();
 
@@ -11,9 +13,17 @@ program
 program
   .command("add", { isDefault: true })
   .description("Interactively install skills into your AI agent(s)")
-  .action(async () => {
-    await addCommand();
-  });
+  .action(async () => { await addCommand(); });
+
+program
+  .command("remove")
+  .description("Reverse previous installs from the manifest")
+  .action(async () => { await removeCommand(); });
+
+program
+  .command("list")
+  .description("List available skills and agents")
+  .action(() => { listCommand(); });
 
 program.parseAsync().catch(err => {
   console.error(err);

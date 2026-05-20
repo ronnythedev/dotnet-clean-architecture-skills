@@ -7649,11 +7649,79 @@ async function addCommand(cwd = process.cwd()) {
   endTui(`Installed ${installs.length} skill(s). Run \`npx dotnet-clean-arch remove\` to reverse.`);
 }
 
+// src/commands/remove.ts
+init_cjs_shims();
+async function removeCommand() {
+  oe("dotnet-clean-arch remove");
+  const store = new ManifestStore();
+  const entries = store.read().entries;
+  if (entries.length === 0) {
+    $e("Nothing to remove \u2014 manifest is empty.");
+    return;
+  }
+  const options2 = entries.map((e2, i) => ({
+    value: i,
+    label: `${e2.skill}`,
+    hint: `${e2.agent} / ${e2.scope} \u2192 ${e2.target}`
+  }));
+  const chosen = await ae({
+    message: "Which installs do you want to remove?",
+    options: options2,
+    initialValues: entries.map((_3, i) => i),
+    required: true
+  });
+  if (lD(chosen)) {
+    ue("Cancelled.");
+    return;
+  }
+  const indices = chosen;
+  const agents = allAgents();
+  let removed = 0;
+  for (const i of indices) {
+    const entry = entries[i];
+    const agent = agents.find((a3) => a3.id === entry.agent);
+    if (!agent) {
+      f2.warn(`Skipping ${entry.skill}: unknown agent ${entry.agent}`);
+      continue;
+    }
+    await agent.uninstall(entry.target);
+    store.remove((e2) => e2 === entry);
+    removed++;
+  }
+  $e(`Removed ${removed} install(s).`);
+}
+
+// src/commands/list.ts
+init_cjs_shims();
+var import_node_url2 = require("url");
+var import_node_path8 = require("path");
+function listCommand() {
+  const here = (0, import_node_path8.dirname)((0, import_node_url2.fileURLToPath)(importMetaUrl));
+  const skills = loadSkillsFrom((0, import_node_path8.join)(here, "skills"));
+  const agents = allAgents();
+  console.log("Agents:");
+  for (const a3 of agents) {
+    console.log(`  ${a3.id.padEnd(14)} ${a3.displayName} (scopes: ${a3.supportedScopes.join(", ")})`);
+  }
+  console.log(`
+Skills (${skills.length}):`);
+  for (const s of skills) {
+    console.log(`  ${s.id.padEnd(40)} ${s.name}`);
+    console.log(`    ${s.description}`);
+  }
+}
+
 // src/cli.ts
 var program2 = new Command();
 program2.name("dotnet-clean-arch").description(".NET Clean Architecture skills installer for Claude Code, Cursor, and GitHub Copilot").version("0.1.0");
 program2.command("add", { isDefault: true }).description("Interactively install skills into your AI agent(s)").action(async () => {
   await addCommand();
+});
+program2.command("remove").description("Reverse previous installs from the manifest").action(async () => {
+  await removeCommand();
+});
+program2.command("list").description("List available skills and agents").action(() => {
+  listCommand();
 });
 program2.parseAsync().catch((err) => {
   console.error(err);
