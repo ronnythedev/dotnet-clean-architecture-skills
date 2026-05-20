@@ -19,13 +19,12 @@ Your assistant generates a proper DDD entity with private setters, a `Create()` 
 ### Get started in 30 seconds
 
 ```bash
-# Clone anywhere, then symlink every skill into ~/.claude/skills
-git clone https://github.com/ronnythedev/dotnet-clean-architecture-skills.git
-cd dotnet-clean-architecture-skills
-./scripts/link-skills.sh
+npx dotnet-clean-arch
 ```
 
-That installs all skills globally for Claude Code. Prefer a per-project install or want to use Copilot/Cursor? See [Installation](#installation) below.
+Interactive installer: pick your agent (Claude Code, Cursor, GitHub Copilot), cherry-pick the skills you want, done. No clone required. See [`dotnet-clean-arch` on npm](https://www.npmjs.com/package/dotnet-clean-arch) for full CLI docs.
+
+Prefer to clone or symlink directly? See [Installation](#installation) below for alternatives.
 
 Then follow [Recipe 0: Scaffold a New Project](recipes/00-scaffold-new-project.md) or jump to [Recipe 1: Add a CRUD Feature](recipes/01-add-crud-feature.md) if you already have a solution.
 
@@ -186,11 +185,34 @@ See the full [Recipes guide](recipes/README.md) for the suggested order and depe
 
 ## Installation
 
-The repo ships a plugin manifest (`.claude-plugin/plugin.json`) and three install scripts under `scripts/`. Pick whichever option fits your setup.
+Pick whichever option fits your setup.
 
-### Option 1: Symlink globally for Claude Code (recommended)
+### Option 1: Interactive installer via `npx` (recommended)
 
-Clone once, run the linker, get every skill in `~/.claude/skills` available across all your projects:
+```bash
+npx dotnet-clean-arch
+```
+
+A TUI walks you through:
+
+- **Agent**: Claude Code (global or project), Cursor (project), GitHub Copilot (project)
+- **Skill selection**: cherry-pick the skills you want, or accept all
+- **Install method**: copy (default) or symlink
+
+Every install is recorded in `~/.dotnet-clean-arch/manifest.json`, so `npx dotnet-clean-arch remove` cleanly reverses only what the CLI installed — it never touches files you've placed there by other means.
+
+Other useful commands:
+
+```bash
+npx dotnet-clean-arch list      # show all 29 skills + their descriptions
+npx dotnet-clean-arch remove    # reverse previous installs from the manifest
+```
+
+The CLI source lives in [`cli/`](cli/) and the package on npm is [`dotnet-clean-arch`](https://www.npmjs.com/package/dotnet-clean-arch).
+
+### Option 2: Symlink globally for Claude Code (manual)
+
+If you'd rather avoid the npm CLI, clone the repo and run the symlink script:
 
 ```bash
 git clone https://github.com/ronnythedev/dotnet-clean-architecture-skills.git
@@ -207,9 +229,9 @@ The linker is re-runnable (symlinks are refreshed on `git pull`) and ships an un
 
 The unlinker is safe: it never touches symlinks that point elsewhere or real directories you've installed by other means.
 
-### Option 2: Clone in-place (Claude Code + GitHub Copilot)
+### Option 3: Clone in-place (Claude Code + GitHub Copilot)
 
-If you'd rather work on top of the repo directly (e.g. you're tweaking skills):
+If you want to work on top of the repo directly (e.g. you're tweaking skills):
 
 ```bash
 git clone https://github.com/ronnythedev/dotnet-clean-architecture-skills.git
@@ -220,7 +242,7 @@ git clone https://github.com/ronnythedev/dotnet-clean-architecture-skills.git
 
 > **Windows note:** Git symlinks require either Developer Mode enabled or running Git as administrator. If symlinks don't resolve, run `git config core.symlinks true` and re-clone.
 
-### Option 3: Copy individual skills into your project
+### Option 4: Copy individual skills into your project
 
 Pick the skills you need and copy them into the appropriate location for your tool:
 
