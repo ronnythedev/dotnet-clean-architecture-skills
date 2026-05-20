@@ -1,12 +1,21 @@
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
-import { loadSkillsFrom } from "./skills/loader.js";
+import { Command } from "commander";
+import { addCommand } from "./commands/add.js";
 
-const here = dirname(fileURLToPath(import.meta.url));
-const skillsDir = join(here, "..", "..", "skills");
-const skills = loadSkillsFrom(skillsDir);
+const program = new Command();
 
-console.log(`Found ${skills.length} skills:`);
-for (const s of skills) {
-  console.log(`  ${s.id.padEnd(40)} ${s.name}`);
-}
+program
+  .name("dotnet-clean-arch")
+  .description(".NET Clean Architecture skills installer for Claude Code, Cursor, and GitHub Copilot")
+  .version("0.1.0");
+
+program
+  .command("add", { isDefault: true })
+  .description("Interactively install skills into your AI agent(s)")
+  .action(async () => {
+    await addCommand();
+  });
+
+program.parseAsync().catch(err => {
+  console.error(err);
+  process.exit(1);
+});
