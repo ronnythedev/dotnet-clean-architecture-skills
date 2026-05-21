@@ -18,6 +18,8 @@ Your assistant generates a proper DDD entity with private setters, a `Create()` 
 
 ### Get started in 30 seconds
 
+![Install and uninstall skills with npx dotnet-clean-arch](demos/install-uninstall.gif)
+
 ```bash
 npx dotnet-clean-arch
 ```
@@ -188,6 +190,8 @@ See the full [Recipes guide](recipes/README.md) for the suggested order and depe
 Pick whichever option fits your setup.
 
 ### Option 1: Interactive installer via `npx` (recommended)
+
+![Install and uninstall skills with npx dotnet-clean-arch](demos/install-uninstall.gif)
 
 ```bash
 npx dotnet-clean-arch
