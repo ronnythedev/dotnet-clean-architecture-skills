@@ -6729,7 +6729,7 @@ var {
 // src/commands/add.ts
 init_cjs_shims();
 var import_node_url = require("url");
-var import_node_path7 = require("path");
+var import_node_path8 = require("path");
 
 // src/skills/loader.ts
 init_cjs_shims();
@@ -6857,60 +6857,60 @@ var ClaudeCodeAgent = class {
   }
 };
 
-// src/agents/cursor.ts
+// src/agents/codex.ts
 init_cjs_shims();
 var import_node_fs4 = require("fs");
+var import_node_os2 = require("os");
 var import_node_path4 = require("path");
+var CodexAgent = class {
+  /** Override homedir for testing. */
+  constructor(home = (0, import_node_os2.homedir)()) {
+    this.home = home;
+  }
+  home;
+  id = "codex";
+  displayName = "Codex";
+  supportedScopes = ["global", "project"];
+  detect(projectDir) {
+    return (0, import_node_fs4.existsSync)((0, import_node_path4.join)(this.home, ".codex")) || (0, import_node_fs4.existsSync)((0, import_node_path4.join)(this.home, ".agents")) || (0, import_node_fs4.existsSync)((0, import_node_path4.join)(projectDir, ".agents")) || (0, import_node_fs4.existsSync)((0, import_node_path4.join)(projectDir, ".codex"));
+  }
+  async install(skill, opts) {
+    const root = opts.scope === "global" ? (0, import_node_path4.join)(this.home, ".agents", "skills") : (0, import_node_path4.join)(opts.projectDir, ".agents", "skills");
+    const target = (0, import_node_path4.join)(root, skill.id);
+    if (opts.method === "symlink") {
+      symlinkOrCopyDir(skill.sourceDir, target);
+    } else {
+      copyDir(skill.sourceDir, target);
+    }
+    return { target, displayName: `${this.displayName} (${opts.scope}): ${skill.name}` };
+  }
+  async uninstall(target) {
+    const expectedRoot = (0, import_node_path4.join)(target, "..");
+    removeIfOurs(target, expectedRoot);
+  }
+};
+
+// src/agents/cursor.ts
+init_cjs_shims();
+var import_node_fs5 = require("fs");
+var import_node_path5 = require("path");
 var import_gray_matter2 = __toESM(require_gray_matter(), 1);
 var CursorAgent = class {
   id = "cursor";
   displayName = "Cursor";
   supportedScopes = ["project"];
   detect(projectDir) {
-    return (0, import_node_fs4.existsSync)((0, import_node_path4.join)(projectDir, ".cursor"));
+    return (0, import_node_fs5.existsSync)((0, import_node_path5.join)(projectDir, ".cursor"));
   }
   async install(skill, opts) {
     if (opts.scope !== "project") {
       throw new Error(`Cursor only supports project scope, got: ${opts.scope}`);
     }
-    const rulesDir = (0, import_node_path4.join)(opts.projectDir, ".cursor", "rules");
-    const target = (0, import_node_path4.join)(rulesDir, `${skill.id}.mdc`);
-    (0, import_node_fs4.mkdirSync)(rulesDir, { recursive: true });
+    const rulesDir = (0, import_node_path5.join)(opts.projectDir, ".cursor", "rules");
+    const target = (0, import_node_path5.join)(rulesDir, `${skill.id}.mdc`);
+    (0, import_node_fs5.mkdirSync)(rulesDir, { recursive: true });
     const content = import_gray_matter2.default.stringify(skill.body, {
       description: skill.description
-    });
-    (0, import_node_fs4.writeFileSync)(target, content, "utf8");
-    return { target, displayName: `${this.displayName}: ${skill.name}` };
-  }
-  async uninstall(target) {
-    removeIfOurs(target, (0, import_node_path4.dirname)(target));
-  }
-};
-
-// src/agents/copilot.ts
-init_cjs_shims();
-var import_node_fs5 = require("fs");
-var import_node_path5 = require("path");
-var import_gray_matter3 = __toESM(require_gray_matter(), 1);
-var CopilotAgent = class {
-  id = "copilot";
-  displayName = "GitHub Copilot";
-  supportedScopes = ["project"];
-  detect(projectDir) {
-    return (0, import_node_fs5.existsSync)((0, import_node_path5.join)(projectDir, ".github"));
-  }
-  async install(skill, opts) {
-    if (opts.scope !== "project") {
-      throw new Error(`Copilot only supports project scope, got: ${opts.scope}`);
-    }
-    const dir = (0, import_node_path5.join)(opts.projectDir, ".github", "instructions");
-    const target = (0, import_node_path5.join)(dir, `${skill.id}.instructions.md`);
-    (0, import_node_fs5.mkdirSync)(dir, { recursive: true });
-    const body = `> ${skill.description}
-
-${skill.body}`;
-    const content = import_gray_matter3.default.stringify(body, {
-      applyTo: "**/*.cs,**/*.csproj,**/*.sln"
     });
     (0, import_node_fs5.writeFileSync)(target, content, "utf8");
     return { target, displayName: `${this.displayName}: ${skill.name}` };
@@ -6920,10 +6920,44 @@ ${skill.body}`;
   }
 };
 
+// src/agents/copilot.ts
+init_cjs_shims();
+var import_node_fs6 = require("fs");
+var import_node_path6 = require("path");
+var import_gray_matter3 = __toESM(require_gray_matter(), 1);
+var CopilotAgent = class {
+  id = "copilot";
+  displayName = "GitHub Copilot";
+  supportedScopes = ["project"];
+  detect(projectDir) {
+    return (0, import_node_fs6.existsSync)((0, import_node_path6.join)(projectDir, ".github"));
+  }
+  async install(skill, opts) {
+    if (opts.scope !== "project") {
+      throw new Error(`Copilot only supports project scope, got: ${opts.scope}`);
+    }
+    const dir = (0, import_node_path6.join)(opts.projectDir, ".github", "instructions");
+    const target = (0, import_node_path6.join)(dir, `${skill.id}.instructions.md`);
+    (0, import_node_fs6.mkdirSync)(dir, { recursive: true });
+    const body = `> ${skill.description}
+
+${skill.body}`;
+    const content = import_gray_matter3.default.stringify(body, {
+      applyTo: "**/*.cs,**/*.csproj,**/*.sln"
+    });
+    (0, import_node_fs6.writeFileSync)(target, content, "utf8");
+    return { target, displayName: `${this.displayName}: ${skill.name}` };
+  }
+  async uninstall(target) {
+    removeIfOurs(target, (0, import_node_path6.dirname)(target));
+  }
+};
+
 // src/agents/registry.ts
 function allAgents() {
   return [
     new ClaudeCodeAgent(),
+    new CodexAgent(),
     new CursorAgent(),
     new CopilotAgent()
   ];
@@ -6934,19 +6968,19 @@ function detectAgents(projectDir) {
 
 // src/manifest/store.ts
 init_cjs_shims();
-var import_node_fs6 = require("fs");
-var import_node_path6 = require("path");
-var import_node_os2 = require("os");
+var import_node_fs7 = require("fs");
+var import_node_path7 = require("path");
+var import_node_os3 = require("os");
 var ManifestStore = class {
-  constructor(root = (0, import_node_path6.join)((0, import_node_os2.homedir)(), ".dotnet-clean-arch")) {
+  constructor(root = (0, import_node_path7.join)((0, import_node_os3.homedir)(), ".dotnet-clean-arch")) {
     this.root = root;
-    this.file = (0, import_node_path6.join)(root, "manifest.json");
+    this.file = (0, import_node_path7.join)(root, "manifest.json");
   }
   root;
   file;
   read() {
-    if (!(0, import_node_fs6.existsSync)(this.file)) return { v: 1, entries: [] };
-    const raw = (0, import_node_fs6.readFileSync)(this.file, "utf8");
+    if (!(0, import_node_fs7.existsSync)(this.file)) return { v: 1, entries: [] };
+    const raw = (0, import_node_fs7.readFileSync)(this.file, "utf8");
     const parsed = JSON.parse(raw);
     if (parsed.v !== 1) {
       throw new Error(`Unsupported manifest version: ${parsed.v}`);
@@ -6969,8 +7003,8 @@ var ManifestStore = class {
     this.write(m2);
   }
   write(m2) {
-    (0, import_node_fs6.mkdirSync)(this.root, { recursive: true });
-    (0, import_node_fs6.writeFileSync)(this.file, JSON.stringify(m2, null, 2), "utf8");
+    (0, import_node_fs7.mkdirSync)(this.root, { recursive: true });
+    (0, import_node_fs7.writeFileSync)(this.file, JSON.stringify(m2, null, 2), "utf8");
   }
 };
 
@@ -7540,7 +7574,8 @@ async function chooseAgents(all, detected) {
     label: a3.displayName + (detected.includes(a3) ? "  (detected)" : ""),
     hint: detected.includes(a3) ? void 0 : "not detected in cwd"
   }));
-  const initialValues = detected.some((a3) => a3.id === "claude-code") ? ["claude-code"] : [];
+  const preferred = detected.find((a3) => a3.id === "claude-code") ?? detected.find((a3) => a3.id === "codex");
+  const initialValues = preferred ? [preferred.id] : [];
   const selected = await ae({
     message: "Which agents do you want to install into? (Space toggles, Enter confirms)",
     options: options2,
@@ -7569,8 +7604,8 @@ async function chooseScope(supported) {
   const choice = await ie({
     message: "Install scope?",
     options: [
-      { value: "global", label: "Global (~/.claude/skills/)", hint: "available across all projects" },
-      { value: "project", label: "Project (./.claude/skills/)", hint: "available only in this repo" }
+      { value: "global", label: "Global", hint: "available across all projects" },
+      { value: "project", label: "Project", hint: "available only in this repo" }
     ],
     initialValue: "global"
   });
@@ -7602,8 +7637,8 @@ async function confirmPlan(summary) {
 
 // src/commands/add.ts
 async function addCommand(cwd = process.cwd()) {
-  const here = (0, import_node_path7.dirname)((0, import_node_url.fileURLToPath)(importMetaUrl));
-  const bundledSkills = (0, import_node_path7.join)(here, "skills");
+  const here = (0, import_node_path8.dirname)((0, import_node_url.fileURLToPath)(importMetaUrl));
+  const bundledSkills = (0, import_node_path8.join)(here, "skills");
   const skills = loadSkillsFrom(bundledSkills);
   if (skills.length === 0) {
     fail(`No skills bundled in ${bundledSkills}. The package build may be broken.`);
@@ -7632,7 +7667,7 @@ async function addCommand(cwd = process.cwd()) {
       const result = await agent.install(skill, {
         scope,
         method,
-        projectDir: (0, import_node_path7.resolve)(cwd)
+        projectDir: (0, import_node_path8.resolve)(cwd)
       });
       store.append({
         v: 1,
@@ -7694,10 +7729,10 @@ async function removeCommand() {
 // src/commands/list.ts
 init_cjs_shims();
 var import_node_url2 = require("url");
-var import_node_path8 = require("path");
+var import_node_path9 = require("path");
 function listCommand() {
-  const here = (0, import_node_path8.dirname)((0, import_node_url2.fileURLToPath)(importMetaUrl));
-  const skills = loadSkillsFrom((0, import_node_path8.join)(here, "skills"));
+  const here = (0, import_node_path9.dirname)((0, import_node_url2.fileURLToPath)(importMetaUrl));
+  const skills = loadSkillsFrom((0, import_node_path9.join)(here, "skills"));
   const agents = allAgents();
   console.log("Agents:");
   for (const a3 of agents) {
@@ -7713,7 +7748,7 @@ Skills (${skills.length}):`);
 
 // src/cli.ts
 var program2 = new Command();
-program2.name("dotnet-clean-arch").description(".NET Clean Architecture skills installer for Claude Code, Cursor, and GitHub Copilot").version("0.1.0");
+program2.name("dotnet-clean-arch").description(".NET Clean Architecture skills installer for Claude Code, Codex, Cursor, and GitHub Copilot").version("0.1.1");
 program2.command("add", { isDefault: true }).description("Interactively install skills into your AI agent(s)").action(async () => {
   await addCommand();
 });
