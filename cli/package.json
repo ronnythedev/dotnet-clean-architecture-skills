@@ -1,6 +1,6 @@
 {
   "name": "dotnet-clean-arch",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Install .NET Clean Architecture skills into Claude Code, Codex, Cursor, and GitHub Copilot via an interactive TUI.",
   "type": "module",
   "bin": {
