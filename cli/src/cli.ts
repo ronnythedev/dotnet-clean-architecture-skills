@@ -7,7 +7,7 @@ const program = new Command();
 
 program
   .name("dotnet-clean-arch")
-  .description(".NET Clean Architecture skills installer for Claude Code, Cursor, and GitHub Copilot")
+  .description(".NET Clean Architecture skills installer for Claude Code, Codex, Cursor, and GitHub Copilot")
   .version("0.1.0");
 
 program

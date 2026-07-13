@@ -22,9 +22,9 @@ export async function chooseAgents(all: Agent[], detected: Agent[]): Promise<Age
     hint: detected.includes(a) ? undefined : "not detected in cwd"
   }));
 
-  const initialValues = detected.some(a => a.id === "claude-code")
-    ? ["claude-code"]
-    : [];
+  const preferred = detected.find(a => a.id === "claude-code") ??
+    detected.find(a => a.id === "codex");
+  const initialValues = preferred ? [preferred.id] : [];
 
   const selected = await multiselect({
     message: "Which agents do you want to install into? (Space toggles, Enter confirms)",
@@ -60,8 +60,8 @@ export async function chooseScope(supported: readonly Scope[]): Promise<Scope> {
   const choice = await select({
     message: "Install scope?",
     options: [
-      { value: "global", label: "Global (~/.claude/skills/)", hint: "available across all projects" },
-      { value: "project", label: "Project (./.claude/skills/)", hint: "available only in this repo" }
+      { value: "global", label: "Global", hint: "available across all projects" },
+      { value: "project", label: "Project", hint: "available only in this repo" }
     ],
     initialValue: "global"
   });

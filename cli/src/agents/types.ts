@@ -18,13 +18,13 @@ export interface InstallResult {
 }
 
 export interface Agent {
-  /** Stable id used internally and in the manifest, e.g. "claude-code". */
+  /** Stable id used internally and in the manifest, e.g. "claude-code" or "codex". */
   id: string;
   /** Human-friendly name shown in TUI, e.g. "Claude Code". */
   displayName: string;
   /** Returns true if this agent appears to be configured in `projectDir` or globally. */
   detect(projectDir: string): boolean;
-  /** Scopes this agent supports. Claude Code: ["global", "project"]. Cursor/Copilot: ["project"]. */
+  /** Scopes this agent supports. Claude Code/Codex: ["global", "project"]. Cursor/Copilot: ["project"]. */
   supportedScopes: readonly Scope[];
   /** Installs a single skill and returns where it landed. */
   install(skill: Skill, opts: InstallOptions): Promise<InstallResult>;
