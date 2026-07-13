@@ -1,6 +1,6 @@
 # dotnet-clean-arch
 
-Interactive installer for the [.NET Clean Architecture skills](https://github.com/ronnythedev/dotnet-clean-architecture-skills) — installs them into Claude Code, Cursor, or GitHub Copilot via a TUI with multi-select, agent auto-detection, and scope/method prompts.
+Interactive installer for the [.NET Clean Architecture skills](https://github.com/ronnythedev/dotnet-clean-architecture-skills) — installs them into Claude Code, Codex, Cursor, or GitHub Copilot via a TUI with multi-select, agent auto-detection, and scope/method prompts.
 
 ## Quickstart
 
@@ -23,6 +23,7 @@ Pick your agent, pick your skills, done.
 | Agent | Scope | Output |
 |---|---|---|
 | Claude Code | global (`~/.claude/skills/`) or project (`./.claude/skills/`) | Skill folder, copied or symlinked |
+| Codex | global (`~/.agents/skills/`) or project (`./.agents/skills/`) | Skill folder, copied or symlinked |
 | Cursor | project only (`.cursor/rules/`) | `<name>.mdc` with description frontmatter |
 | GitHub Copilot | project only (`.github/instructions/`) | `<name>.instructions.md` with `applyTo: **/*.cs,**/*.csproj,**/*.sln` |
 

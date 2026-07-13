@@ -1,8 +1,8 @@
 # .NET Clean Architecture Skills
 
-**27 AI-ready skills** that teach your coding assistant how to generate production-grade .NET code — Clean Architecture, CQRS, DDD — without explaining the patterns every time.
+**29 AI-ready skills** that teach your coding assistant how to generate production-grade .NET code — Clean Architecture, CQRS, DDD — without explaining the patterns every time.
 
-**Works with:** Claude Code | GitHub Copilot | Cursor
+**Works with:** Claude Code | Codex | GitHub Copilot | Cursor
 
 ### Before (plain prompt)
 
@@ -24,7 +24,7 @@ Your assistant generates a proper DDD entity with private setters, a `Create()` 
 npx dotnet-clean-arch
 ```
 
-Interactive installer: pick your agent (Claude Code, Cursor, GitHub Copilot), cherry-pick the skills you want, done. No clone required. See [`dotnet-clean-arch` on npm](https://www.npmjs.com/package/dotnet-clean-arch) for full CLI docs.
+Interactive installer: pick your agent (Claude Code, Codex, Cursor, GitHub Copilot), cherry-pick the skills you want, done. No clone required. See [`dotnet-clean-arch` on npm](https://www.npmjs.com/package/dotnet-clean-arch) for full CLI docs.
 
 Prefer to clone or symlink directly? See [Installation](#installation) below for alternatives.
 
@@ -199,7 +199,7 @@ npx dotnet-clean-arch
 
 A TUI walks you through:
 
-- **Agent**: Claude Code (global or project), Cursor (project), GitHub Copilot (project)
+- **Agent**: Claude Code (global or project), Codex (global or project), Cursor (project), GitHub Copilot (project)
 - **Skill selection**: cherry-pick the skills you want, or accept all
 - **Install method**: copy (default) or symlink
 
@@ -259,6 +259,15 @@ cp -r skills/01-dotnet-clean-architecture your-project/.claude/skills/
 cp -r skills/* your-project/.claude/skills/
 ```
 
+**Codex:**
+```bash
+# Copy a single skill
+cp -r skills/01-dotnet-clean-architecture your-project/.agents/skills/
+
+# Or copy all skills
+cp -r skills/* your-project/.agents/skills/
+```
+
 **GitHub Copilot:**
 ```bash
 # Copy a single skill
@@ -270,11 +279,16 @@ cp -r skills/* your-project/skills/
 
 ### The plugin manifest
 
-`.claude-plugin/plugin.json` declares the plugin name and enumerates every skill path. It's what makes the repo discoverable by Claude Code's plugin loader and by third-party installers that consume the same manifest format. If you add or rename a skill, update the manifest so external tooling stays in sync.
+The repository includes native manifests for both supported plugin systems:
+
+- `.claude-plugin/plugin.json` declares the plugin and its skill paths for Claude Code.
+- `.codex-plugin/plugin.json` declares the plugin metadata and shared `skills/` directory for Codex.
+
+These manifests make the repository installable as a plugin instead of requiring users to copy individual skill directories. If you add or rename a skill, keep both manifests valid so external tooling stays in sync.
 
 ### Using the skills
 
-Once installed, ask Claude to apply the patterns to your specific use case. Each skill contains:
+Once installed, ask your coding agent to apply the patterns to your specific use case. Each skill contains:
 - Overview and purpose
 - Quick reference table
 - Complete code templates
