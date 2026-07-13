@@ -1,0 +1,41 @@
+{
+  "name": "dotnet-clean-architecture-skills",
+  "version": "0.1.1",
+  "description": "Production-ready .NET Clean Architecture, CQRS, DDD, infrastructure, and testing workflows.",
+  "author": {
+    "name": "Ronny Delgado",
+    "email": "ronny@ronnydelgado.com",
+    "url": "https://github.com/ronnythedev"
+  },
+  "homepage": "https://github.com/ronnythedev/dotnet-clean-architecture-skills",
+  "repository": "https://github.com/ronnythedev/dotnet-clean-architecture-skills",
+  "license": "MIT",
+  "keywords": [
+    "dotnet",
+    "clean-architecture",
+    "cqrs",
+    "ddd",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": ".NET Clean Architecture Skills",
+    "shortDescription": "Production-ready .NET architecture workflows",
+    "longDescription": "Build .NET applications with reusable Clean Architecture, CQRS, DDD, persistence, security, infrastructure, and testing workflows.",
+    "developerName": "Ronny Delgado",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/ronnythedev/dotnet-clean-architecture-skills",
+    "defaultPrompt": [
+      "Scaffold a .NET solution using Clean Architecture.",
+      "Add a CQRS feature to this .NET application.",
+      "Review this .NET project against the architecture skills."
+    ],
+    "brandColor": "#512BD4",
+    "screenshots": []
+  }
+}
